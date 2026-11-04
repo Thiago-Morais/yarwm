@@ -1,0 +1,21 @@
+# Project formatting rules — these override your editor's global settings.
+# Go files are formatted by gofmt (`make fmt`); this file covers everything
+# else and keeps editors from fighting gofmt on Go files.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# gofmt indents with tabs; a Makefile *must* use tabs.
+[{*.go,go.mod,Makefile}]
+indent_style = tab
+indent_size = 4
+
+# Trailing double spaces are a line break in Markdown.
+[*.md]
+trim_trailing_whitespace = false
