@@ -1,7 +1,14 @@
 # Thin wrappers around the dev container. Every Go command runs inside the
 # pinned toolchain, so results match on every machine. Only `docker`, `make`
 # and `git` are needed on the host.
-RUN := docker compose run --rm dev
+
+# The container runs as your host user so files it writes (build/, .cache/)
+# stay owned by you. Override if needed: `make check DEV_UID=1001`.
+export DEV_UID ?= $(shell id -u)
+export DEV_GID ?= $(shell id -g)
+
+# -T: no pseudo-TTY, so targets also work in CI. `make shell` keeps the TTY.
+RUN := docker compose run --rm -T dev
 
 # Version string comes from git on the host, e.g.
 #   v0.1.0                    exactly on a tag
@@ -11,10 +18,10 @@ RUN := docker compose run --rm dev
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null)
 LDFLAGS := -X main.injectedVersion=$(VERSION)
 
-.PHONY: shell build run test vet fmt fmt-check check clean clean-cache image
+.PHONY: shell build run test vet lint fmt fmt-check check clean clean-cache image
 
 shell:
-	$(RUN) bash
+	docker compose run --rm dev bash
 
 build:
 	$(RUN) go build -ldflags "$(LDFLAGS)" -o build/yarwm .
@@ -29,6 +36,10 @@ test:
 vet:
 	$(RUN) go vet ./...
 
+# golangci-lint, configured in .golangci.yml (includes go vet's checks).
+lint:
+	$(RUN) golangci-lint run ./...
+
 # ./... skips directories starting with "." — so .cache/ is never touched.
 fmt:
 	$(RUN) go fmt ./...
@@ -37,7 +48,7 @@ fmt:
 fmt-check:
 	$(RUN) sh -c 'unformatted="$$(gofmt -l $$(go list -f "{{.Dir}}" ./...))"; if [ -n "$$unformatted" ]; then echo "needs gofmt:"; echo "$$unformatted"; exit 1; fi'
 
-check: fmt-check vet test
+check: fmt-check lint test
 
 # Build output only — cheap to recreate.
 clean:
