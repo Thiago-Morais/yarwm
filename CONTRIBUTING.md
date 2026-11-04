@@ -138,8 +138,6 @@ standard library feature.
 ## Before merging into `dev`
 
 - `make check` passes (gofmt, golangci-lint, tests) — CI runs it too.
-- Follow the code style in `docs/spec.md`: descriptive names by default,
-  single letters only in tiny scopes like one-line functions and simple
-  math, no `Get` prefix on accessors. This is a review guideline, not a
-  lint rule.
+- Follow the code style in `docs/spec.md`: descriptive names, no `Get`
+  prefix on accessors.
 - The squash commit message follows the commit convention above.
