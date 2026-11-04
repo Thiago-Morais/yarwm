@@ -86,7 +86,7 @@ Dependabot). On the host you only need Docker (with the Compose plugin),
 
 ```sh
 # setup
-make image                # build the dev image (the toolchain), runs automatically
+make dev-image            # build the dev image (the toolchain), runs automatically
 make shell                # interactive shell inside the dev container
 
 # write
@@ -119,7 +119,7 @@ docker compose run --rm dev go list ./...
 
 Every `make` target first brings the image up to date, silently
 (`docker compose build --quiet`, about a second when nothing changed).
-When calling `docker compose run` directly, run `make image` first if
+When calling `docker compose run` directly, run `make dev-image` first if
 `docker/dev/Dockerfile` has changed. Go's module and build caches are
 written to `.cache/` inside the repo (gitignored), so they're ordinary
 files you can see and delete.

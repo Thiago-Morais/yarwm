@@ -3,7 +3,7 @@
 # and `git` are needed on the host.
 #
 # Targets are listed in the order you reach for them while working:
-#   1. setup    image, shell
+#   1. setup    dev-image, shell
 #   2. write    fmt, run, debug, debug-server
 #   3. verify   test, vet, lint, fmt-check, check
 #   4. ship     build
@@ -29,7 +29,7 @@ LDFLAGS := -X main.injectedVersion=$(VERSION)
 # Port for `make debug-server`; .nvim.lua reads the same variable.
 DEBUG_PORT ?= 2345
 
-.PHONY: image shell fmt run debug debug-server test vet lint fmt-check check build clean clean-cache
+.PHONY: dev-image shell fmt run debug debug-server test vet lint fmt-check check build clean clean-cache
 
 # --- 1. setup ---------------------------------------------------------------
 
@@ -37,20 +37,20 @@ DEBUG_PORT ?= 2345
 # yarwm itself, that's `make build`. Every target that uses the container
 # depends on this, so it runs first: silently, once per `make` invocation,
 # and only rebuilds when docker/dev/Dockerfile (or your UID) changed.
-image:
+dev-image:
 	docker compose build --quiet
 
-shell: image
+shell: dev-image
 	docker compose run --rm dev bash
 
 # --- 2. write ---------------------------------------------------------------
 
 # ./... skips directories starting with "." — so .cache/ is never touched.
-fmt: image
+fmt: dev-image
 	$(RUN) go fmt ./...
 
 # Compile and run from source, e.g. `make run ARGS="version"`.
-run: image
+run: dev-image
 	$(RUN) go run -ldflags "$(LDFLAGS)" . $(ARGS)
 
 # Delve (`go tool dlv`, pinned by the `tool` line in go.mod).
@@ -59,27 +59,27 @@ run: image
 #                `continue`, `next`, `step`, `print <name>`, `quit`.
 # debug-server:  headless debugger on 127.0.0.1:$(DEBUG_PORT) for an editor's
 #                DAP client to attach to (see "Debugging" in README.md).
-debug: image
+debug: dev-image
 	docker compose run --rm dev go tool dlv debug . -- $(ARGS)
 
-debug-server: image
+debug-server: dev-image
 	docker compose run --rm --publish 127.0.0.1:$(DEBUG_PORT):2345 dev \
 		go tool dlv debug --headless --listen=:2345 --api-version=2 . -- $(ARGS)
 
 # --- 3. verify --------------------------------------------------------------
 
-test: image
+test: dev-image
 	$(RUN) go test ./...
 
-vet: image
+vet: dev-image
 	$(RUN) go vet ./...
 
 # golangci-lint, configured in .golangci.yml (includes go vet's checks).
-lint: image
+lint: dev-image
 	$(RUN) golangci-lint run ./...
 
 # Fails if any file needs formatting (gofmt -l lists them).
-fmt-check: image
+fmt-check: dev-image
 	$(RUN) sh -c 'unformatted="$$(gofmt -l $$(go list -f "{{.Dir}}" ./...))"; if [ -n "$$unformatted" ]; then echo "needs gofmt:"; echo "$$unformatted"; exit 1; fi'
 
 # Everything CI runs. Run before opening a pull request.
@@ -87,7 +87,7 @@ check: fmt-check lint test
 
 # --- 4. ship ----------------------------------------------------------------
 
-build: image
+build: dev-image
 	$(RUN) go build -ldflags "$(LDFLAGS)" -o build/yarwm .
 
 # --- 5. tidy ----------------------------------------------------------------
