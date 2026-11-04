@@ -2,38 +2,57 @@
 
 ## Branch model (gitflow)
 
-| Branch | Branches off | Merges into | Purpose |
-|---|---|---|---|
-| `main` | — | — | Released versions only. Every commit on `main` is a tagged release. |
-| `dev` | `main` | — | Integration branch. Always builds and passes `make check`. |
-| `feature/<name>` | `dev` | `dev` | One feature or change. |
-| `release/<version>` | `dev` | `main` **and** `dev` | Stabilizing a release: version bump, fixes, docs. No new features. |
-| `hotfix/<version>` | `main` | `main` **and** `dev` | Urgent fix to a released version. |
+| Branch | Branches off | Merges into | How | Purpose |
+|---|---|---|---|---|
+| `main` | — | — | — | Released versions only. Every commit on `main` is a tagged release. |
+| `dev` | `main` | — | — | Integration branch. Always builds and passes `make check`. |
+| `feature/<name>` | `dev` | `dev` | squash | One feature or change. |
+| `release/<version>` | `dev` | `main` **and** `dev` | `--no-ff` merge | Stabilizing a release: fixes and docs only, no new features. |
+| `hotfix/<version>` | `main` | `main` **and** `dev` | `--no-ff` merge | Urgent fix to a released version. |
 
 Never commit directly to `main` or `dev`.
+
+## Merge strategy
+
+**Features are squash-merged into `dev`.** Commit as often and as messily
+as you like on a feature branch; it lands on `dev` as one clean commit.
+Each feature should be small enough to describe in a single commit message
+— if it isn't, split it into two features.
+
+If a feature branch genuinely holds several independent, meaningful
+commits, tidy them with `git rebase -i --autosquash dev` and merge without
+squashing instead. That is the exception, not the default.
+
+**Releases and hotfixes are real merges (`--no-ff`), never squashed.**
+Squashing `dev` into `main` would make git forget that `main` contains
+those commits, and the next merge between `main` and `dev` would turn into
+conflicts. Gitflow relies on the two sharing history.
 
 ### Feature
 
 ```sh
 git switch dev && git pull
 git switch -c feature/<short-name>
-# ...work, commit...
+# ...work, commit, push the branch for review...
+git push -u origin feature/<short-name>
+
+# once approved:
+git merge dev                        # or rebase onto dev, if dev has moved
 make check
 git switch dev && git pull
-git merge --no-ff feature/<short-name>
+git merge --squash feature/<short-name>
+git commit                           # write the conventional commit message
 git push origin dev
-git branch -d feature/<short-name>
+git branch -D feature/<short-name>   # -D: git can't tell a squash was merged
+git push origin --delete feature/<short-name>
 ```
-
-Keep feature branches small — one step of the feature plan each — and
-rebase onto `dev` (or merge `dev` in) if `dev` has moved before merging.
 
 ### Release
 
 ```sh
 git switch dev && git pull
 git switch -c release/<version>       # e.g. release/0.1.0
-# final fixes and docs only — no version to bump, the tag below is the version
+# final fixes and docs only — the tag below is the version, nothing to bump
 make check
 git switch main && git merge --no-ff release/<version>
 git tag -a v<version> -m "v<version>"
@@ -44,8 +63,38 @@ git branch -d release/<version>
 
 ### Hotfix
 
-Same as a release, but branch from `main` as `hotfix/<version>` (bumping
-the patch number) and merge back into both `main` and `dev`.
+Same as a release, but branch from `main` as `hotfix/<version>` (the
+current version with the patch number + 1) and merge back into both
+`main` and `dev`.
+
+## Commit messages
+
+[Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/):
+
+```
+<type>(<optional scope>): <description>
+
+<optional body: why, not what>
+```
+
+| Type | For |
+|---|---|
+| `feat` | a new user-facing capability |
+| `fix` | a bug fix |
+| `refactor` | code change with no behavior change |
+| `test` | adding or fixing tests only |
+| `docs` | documentation only |
+| `build` | dev container, Makefile, `go.mod`, dependencies |
+| `chore` | anything else that doesn't touch the program (e.g. `.gitignore`) |
+
+- Scope is the package or area, e.g. `feat(history): bucket screen time by day`.
+- Description: imperative, lower case, no trailing period — "add", not
+  "added" or "adds".
+- Breaking change: `!` after the type/scope (`feat(config)!: ...`) plus a
+  `BREAKING CHANGE:` line in the body.
+
+On a feature branch this is encouraged but not enforced. **The squash
+commit on `dev` must follow it.**
 
 ## Versioning
 
@@ -59,11 +108,21 @@ injects the result, so `yarwm version` prints e.g. `v0.1.0` on a tag,
 changes. `go install github.com/Thiago-Morais/yarwm@v0.1.0` gets its version
 from the module system instead, without git.
 
+## Bumping the Go version
+
+The Go version is pinned in three places — change them together, in one
+`build:` commit:
+
+- `go.mod` — the `go` line
+- `docker/dev/Dockerfile` — the `FROM golang:<version>-...` tag
+- `compose.yaml` — the `image: yarwm-dev:go<version>` tag
+
+Then run `make image` to rebuild the dev container.
+
 ## Before merging into `dev`
 
 - `make check` passes (gofmt, `go vet`, tests).
 - Follow the code style in `docs/spec.md`: descriptive names, no
   single-letter variables (loop variables and receivers included), no
   `Get` prefix on accessors.
-- Merge with `--no-ff` so every feature stays visible as one unit in the
-  history.
+- The squash commit message follows the commit convention above.
