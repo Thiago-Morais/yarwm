@@ -4,9 +4,9 @@
 # Build context is this directory (docker/dev/) and nothing is copied in:
 # the repo is bind-mounted at runtime by compose.yaml.
 #
-# Pinned versions (see CONTRIBUTING.md, "Bumping tool versions"):
-#   Go             here, go.mod, compose.yaml's image tag
-#   golangci-lint  here — must be built with a Go at least as new as ours
+# The two FROM lines are the only tool pins in the repo. Dependabot opens a
+# PR when either has a new release (see CONTRIBUTING.md, "Tool versions");
+# CI on that PR proves the pair still works together.
 FROM golangci/golangci-lint:v2.15.0 AS golangci-lint
 
 FROM golang:1.27.3-trixie

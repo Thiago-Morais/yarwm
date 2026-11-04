@@ -15,8 +15,9 @@ The full design lives in [`docs/spec.md`](docs/spec.md).
 ## Development environment
 
 Every Go command runs inside a pinned Docker container, so every
-contributor uses the exact same toolchain (**Go 1.27.3**, **golangci-lint
-2.15.0**). On the host you only need Docker (with the Compose plugin),
+contributor uses the exact same Go and golangci-lint versions (pinned in
+[`docker/dev/Dockerfile`](docker/dev/Dockerfile), kept current by
+Dependabot). On the host you only need Docker (with the Compose plugin),
 `make` and `git` — no local Go install.
 
 ```sh

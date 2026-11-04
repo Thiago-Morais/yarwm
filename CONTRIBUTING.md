@@ -109,20 +109,30 @@ injects the result, so `yarwm version` prints e.g. `v0.1.0` on a tag,
 changes. `go install github.com/Thiago-Morais/yarwm@v0.1.0` gets its version
 from the module system instead, without git.
 
-## Bumping tool versions
+## Tool versions
 
-Each change is one `build:` commit. The dev image rebuilds itself on the
-next `make` run, so there's nothing else to do.
+Nothing is bumped by hand. [Dependabot](.github/dependabot.yml) checks
+weekly and opens a pull request against `dev` for each new release of:
 
-- **Go** is pinned in two places — change them together:
-  - `go.mod` — the `go` line
-  - `docker/dev/Dockerfile` — the `FROM golang:<version>-...` tag
-- **golangci-lint** is pinned in `docker/dev/Dockerfile` (the
-  `FROM golangci/golangci-lint:<version>` line). It must be built with a Go
-  at least as new as ours — `golangci-lint version` prints which Go it was
-  built with — so after a Go bump, bump it too if needed.
-- **GitHub Actions** are pinned by major version in
-  `.github/workflows/check.yml`.
+| Tool | Pinned in |
+|---|---|
+| Go toolchain | `docker/dev/Dockerfile` — `FROM golang:<version>-trixie` |
+| golangci-lint | `docker/dev/Dockerfile` — `FROM golangci/golangci-lint:<version>` |
+| GitHub Actions | `.github/workflows/check.yml` |
+| Go module dependencies | `go.mod` |
+
+CI runs `make check` on every Dependabot PR; if it's green, review and
+merge it like any feature (squash). The dev image rebuilds itself on the
+next `make` run.
+
+If a Go bump turns CI red, the usual cause is golangci-lint lagging behind:
+it must be built with a Go at least as new as ours (`golangci-lint version`
+prints which). Wait for, or merge, the matching golangci-lint PR first.
+
+**The `go` line in `go.mod` is not a toolchain pin.** It's the minimum
+Go version the code needs, and stays put when the toolchain is updated.
+Raise it only on purpose, when the code starts using a newer language or
+standard library feature.
 
 ## Before merging into `dev`
 
