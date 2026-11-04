@@ -40,10 +40,12 @@ because the generated default config relies on comments (section 8).
 Don't add a CLI framework (e.g. cobra) — the subcommand set is small
 enough for `flag.FlagSet`, and it keeps the dependency list at one.
 
-**Code style:** descriptive names everywhere, no single-letter variable
-names (including loop variables and receivers — `for index, wallpaper :=
-range ...`, not `for i, w := range ...`). Go convention of no `Get` prefix
-on accessors applies (`ScreenTime()`, not `GetScreenTime()`).
+**Code style:** descriptive names by default (`for index, wallpaper :=
+range ...`, not `for i, w := range ...`). Single-letter names are fine
+where the scope is tiny and the meaning obvious: one-line functions and
+simple math (e.g. `func square(x float64) float64 { return x * x }`). Go
+convention of no `Get` prefix on accessors applies (`ScreenTime()`, not
+`GetScreenTime()`).
 
 **Suggested layout:**
 
