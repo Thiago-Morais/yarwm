@@ -1,7 +1,11 @@
 # Development environment for yarwm. This image is only the shared
 # toolchain; yarwm itself ships as a plain static binary.
 #
-# The Go version is pinned here and in go.mod — bump both together.
+# Build context is this directory (docker/dev/) and nothing is copied in:
+# the repo is bind-mounted at runtime by compose.yaml.
+#
+# The Go version is pinned here, in go.mod and in compose.yaml's image tag —
+# bump all three together.
 FROM golang:1.27.3-trixie
 
 # Run as a non-root user whose UID/GID match the host user, so files the

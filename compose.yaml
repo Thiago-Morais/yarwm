@@ -1,7 +1,9 @@
 services:
   dev:
     build:
-      context: .
+      # Only the dev image's own directory — the repo itself is mounted
+      # below at runtime, never copied into the image.
+      context: ./docker/dev
       args:
         DEV_UID: ${DEV_UID:-1000}
         DEV_GID: ${DEV_GID:-1000}

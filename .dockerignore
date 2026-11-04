@@ -1,3 +1,0 @@
-# The image only needs the Dockerfile; the repo is bind-mounted at runtime.
-**
-!Dockerfile
