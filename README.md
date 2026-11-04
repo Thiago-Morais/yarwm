@@ -106,10 +106,12 @@ anything not covered works directly, e.g.:
 docker compose run --rm dev go list ./...
 ```
 
-The image is (re)built automatically before each run; unchanged layers
-are cached, so after the first run this takes about a second. Go's module
-and build caches are written to `.cache/` inside the repo (gitignored), so
-they're ordinary files you can see and delete.
+Every `make` target first brings the image up to date, silently
+(`docker compose build --quiet`, about a second when nothing changed).
+When calling `docker compose run` directly, run `make image` first if
+`docker/dev/Dockerfile` has changed. Go's module and build caches are
+written to `.cache/` inside the repo (gitignored), so they're ordinary
+files you can see and delete.
 
 **Version:** the git tag is the version. `make build` injects
 `git describe --tags --always --dirty` from the host; the container never

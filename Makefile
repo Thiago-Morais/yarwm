@@ -20,14 +20,16 @@ LDFLAGS := -X main.injectedVersion=$(VERSION)
 
 .PHONY: shell build run debug debug-server test vet lint fmt fmt-check check clean clean-cache image
 
-shell:
+# Every target that uses the container depends on `image`, so the image is
+# brought up to date first: silently, and only once per `make` invocation.
+shell: image
 	docker compose run --rm dev bash
 
-build:
+build: image
 	$(RUN) go build -ldflags "$(LDFLAGS)" -o build/yarwm .
 
 # Pass arguments with ARGS, e.g. `make run ARGS="version"`.
-run:
+run: image
 	$(RUN) go run -ldflags "$(LDFLAGS)" . $(ARGS)
 
 # Delve (`go tool dlv`, pinned by the `tool` line in go.mod).
@@ -39,29 +41,29 @@ run:
 #                DAP client to attach to (see "Debugging" in README.md).
 DEBUG_PORT ?= 2345
 
-debug:
+debug: image
 	docker compose run --rm dev go tool dlv debug . -- $(ARGS)
 
-debug-server:
+debug-server: image
 	docker compose run --rm --publish 127.0.0.1:$(DEBUG_PORT):2345 dev \
 		go tool dlv debug --headless --listen=:2345 --api-version=2 . -- $(ARGS)
 
-test:
+test: image
 	$(RUN) go test ./...
 
-vet:
+vet: image
 	$(RUN) go vet ./...
 
 # golangci-lint, configured in .golangci.yml (includes go vet's checks).
-lint:
+lint: image
 	$(RUN) golangci-lint run ./...
 
 # ./... skips directories starting with "." — so .cache/ is never touched.
-fmt:
+fmt: image
 	$(RUN) go fmt ./...
 
 # Fails if any file needs formatting (gofmt -l lists them).
-fmt-check:
+fmt-check: image
 	$(RUN) sh -c 'unformatted="$$(gofmt -l $$(go list -f "{{.Dir}}" ./...))"; if [ -n "$$unformatted" ]; then echo "needs gofmt:"; echo "$$unformatted"; exit 1; fi'
 
 check: fmt-check lint test
@@ -75,5 +77,7 @@ clean:
 clean-cache:
 	if [ -d .cache ]; then chmod -R u+w .cache && rm -rf .cache; fi
 
+# Rebuild the dev image if docker/dev/Dockerfile (or the UID) changed.
+# Unchanged layers are cached, so this is normally a ~1s silent no-op.
 image:
-	docker compose build
+	docker compose build --quiet
