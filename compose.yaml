@@ -1,0 +1,19 @@
+services:
+  dev:
+    build:
+      context: .
+      args:
+        DEV_UID: ${DEV_UID:-1000}
+        DEV_GID: ${DEV_GID:-1000}
+    image: yarwm-dev:go1.27.3
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+      - go-module-cache:/home/dev/go/pkg/mod
+      - go-build-cache:/home/dev/.cache/go-build
+    stdin_open: true
+    tty: true
+
+volumes:
+  go-module-cache:
+  go-build-cache:
