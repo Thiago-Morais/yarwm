@@ -85,6 +85,7 @@ current version with the patch number + 1) and merge back into both
 | `test` | adding or fixing tests only |
 | `docs` | documentation only |
 | `build` | dev container, Makefile, `go.mod`, dependencies |
+| `ci` | GitHub Actions workflows |
 | `chore` | anything else that doesn't touch the program (e.g. `.gitignore`) |
 
 - Scope is the package or area, e.g. `feat(history): bucket screen time by day`.
@@ -108,21 +109,27 @@ injects the result, so `yarwm version` prints e.g. `v0.1.0` on a tag,
 changes. `go install github.com/Thiago-Morais/yarwm@v0.1.0` gets its version
 from the module system instead, without git.
 
-## Bumping the Go version
+## Bumping tool versions
 
-The Go version is pinned in three places — change them together, in one
-`build:` commit:
+Each change is one `build:` commit. The dev image rebuilds itself on the
+next `make` run, so there's nothing else to do.
 
-- `go.mod` — the `go` line
-- `docker/dev/Dockerfile` — the `FROM golang:<version>-...` tag
-- `compose.yaml` — the `image: yarwm-dev:go<version>` tag
-
-Then run `make image` to rebuild the dev container.
+- **Go** is pinned in two places — change them together:
+  - `go.mod` — the `go` line
+  - `docker/dev/Dockerfile` — the `FROM golang:<version>-...` tag
+- **golangci-lint** is pinned in `docker/dev/Dockerfile` (the
+  `FROM golangci/golangci-lint:<version>` line). It must be built with a Go
+  at least as new as ours — `golangci-lint version` prints which Go it was
+  built with — so after a Go bump, bump it too if needed.
+- **GitHub Actions** are pinned by major version in
+  `.github/workflows/check.yml`.
 
 ## Before merging into `dev`
 
-- `make check` passes (gofmt, `go vet`, tests).
+- `make check` passes (gofmt, golangci-lint, tests) — CI runs it too.
 - Follow the code style in `docs/spec.md`: descriptive names, no
   single-letter variables (loop variables and receivers included), no
-  `Get` prefix on accessors.
+  `Get` prefix on accessors. `varnamelen` in `.golangci.yml` catches most
+  violations, but not a short name used only on the very next line —
+  check for those in review.
 - The squash commit message follows the commit convention above.
