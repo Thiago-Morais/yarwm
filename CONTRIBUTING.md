@@ -2,49 +2,61 @@
 
 ## Branch model (gitflow)
 
-| Branch | Branches off | Merges into | How | Purpose |
-|---|---|---|---|---|
-| `main` | — | — | — | Released versions only. Every commit on `main` is a tagged release. |
-| `dev` | `main` | — | — | Integration branch. Always builds and passes `make check`. |
-| `feature/<name>` | `dev` | `dev` | squash | One feature or change. |
-| `release/<version>` | `dev` | `main` **and** `dev` | `--no-ff` merge | Stabilizing a release: fixes and docs only, no new features. |
-| `hotfix/<version>` | `main` | `main` **and** `dev` | `--no-ff` merge | Urgent fix to a released version. |
+| Branch | Branches off | Merges into | Purpose |
+|---|---|---|---|
+| `main` | — | — | Released versions only. Every commit on `main` is a tagged release. |
+| `dev` | `main` | — | Integration branch. Always builds and passes `make check`. |
+| `feature/<name>` | `dev` | `dev` | One feature or change. |
+| `release/<version>` | `dev` | `main`, then `main` back into `dev` | Stabilizing a release: fixes and docs only, no new features. |
+| `hotfix/<version>` | `main` | `main`, then `main` back into `dev` | Urgent fix to a released version. |
 
-Never commit directly to `main` or `dev`.
+Everything reaches `main` and `dev` through a pull request — GitHub
+rejects direct pushes (see [Repository rules](#repository-rules)).
 
 ## Merge strategy
 
-**Features are squash-merged into `dev`.** Commit as often and as messily
-as you like on a feature branch; it lands on `dev` as one clean commit.
-Each feature should be small enough to describe in a single commit message
-— if it isn't, split it into two features.
+| Into | Allowed | Use |
+|---|---|---|
+| `dev` | Squash, Rebase, Merge | **Squash** by default |
+| `main` | Merge only | — |
 
-If a feature branch genuinely holds several independent, meaningful
-commits, tidy them with `git rebase -i --autosquash dev` and merge without
-squashing instead. That is the exception, not the default.
+**Features are squashed by default.** Commit as often and as messily as
+you like on a feature branch; it lands on `dev` as one clean commit. Each
+feature should be small enough to describe in a single commit message —
+if it isn't, split it into two features.
 
-**Releases and hotfixes are real merges (`--no-ff`), never squashed.**
-Squashing `dev` into `main` would make git forget that `main` contains
-those commits, and the next merge between `main` and `dev` would turn into
-conflicts. Gitflow relies on the two sharing history.
+**Rebase** when a branch holds several meaningful commits you want to keep
+individually: tidy them first (`git rebase -i --autosquash dev`, then
+`git push --force-with-lease`), and they land on `dev` one by one in a
+straight line. **Merge** keeps the branch's commits under a merge commit;
+use it for back-merges from `main`.
+
+**Into `main`, only real merge commits — never squash or rebase.** Both
+rewrite commits, so `main` would hold copies of `dev`'s commits instead of
+the commits themselves; git would no longer see the shared history, and
+the next merge between `main` and `dev` would turn into conflicts.
 
 ### Feature
 
 ```sh
 git switch dev && git pull
 git switch -c feature/<short-name>
-# ...work, commit, push the branch for review...
+# ...work, commit...
 git push -u origin feature/<short-name>
+```
 
-# once approved:
-git merge dev                        # or rebase onto dev, if dev has moved
-make check
+Open a pull request into `dev` (GitHub offers a **Compare & pull request**
+button after the push). CI runs `make check` on it; merging is blocked
+until it's green. If `dev` moved in the meantime, bring it in with
+`git merge dev` (or `git rebase dev` + `git push --force-with-lease`).
+
+Merge with **Squash and merge**, using a conventional commit message as
+the title (see [Commit messages](#commit-messages)). Then delete the
+branch on GitHub and locally:
+
+```sh
 git switch dev && git pull
-git merge --squash feature/<short-name>
-git commit                           # write the conventional commit message
-git push origin dev
 git branch -D feature/<short-name>   # -D: git can't tell a squash was merged
-git push origin --delete feature/<short-name>
 ```
 
 ### Release
@@ -53,19 +65,41 @@ git push origin --delete feature/<short-name>
 git switch dev && git pull
 git switch -c release/<version>       # e.g. release/0.1.0
 # final fixes and docs only — the tag below is the version, nothing to bump
-make check
-git switch main && git merge --no-ff release/<version>
-git tag -a v<version> -m "v<version>"
-git switch dev  && git merge --no-ff release/<version>
-git push origin main dev --tags
-git branch -d release/<version>
+git push -u origin release/<version>
 ```
+
+1. Pull request `release/<version>` → `main`, **Create a merge commit**.
+2. Tag the merge on `main`:
+
+   ```sh
+   git switch main && git pull
+   git tag -a v<version> -m "v<version>"
+   git push origin v<version>
+   ```
+
+3. Pull request `main` → `dev`, **Create a merge commit**, so `dev`
+   contains the release merge and any fixes made on the release branch.
+4. Delete `release/<version>`.
 
 ### Hotfix
 
 Same as a release, but branch from `main` as `hotfix/<version>` (the
-current version with the patch number + 1) and merge back into both
-`main` and `dev`.
+current version with the patch number + 1).
+
+## Repository rules
+
+Configured on GitHub under **Settings → Rules → Rulesets** (not stored in
+the repo):
+
+| Ruleset | Type | Target | Rules |
+|---|---|---|---|
+| dev | branch | `dev` | Restrict deletions; require a pull request (0 approvals; Squash, Rebase, Merge allowed); require status check `check`; block force pushes |
+| main | branch | `main` | Same, but only Merge allowed |
+| releases | tag | `v*` | Restrict deletions; block force pushes — a published version never moves |
+
+The repository admin may bypass the branch rulesets **for pull requests
+only** — e.g. to merge with a red CI in an emergency — but can't push
+directly either.
 
 ## Commit messages
 
@@ -94,8 +128,9 @@ current version with the patch number + 1) and merge back into both
 - Breaking change: `!` after the type/scope (`feat(config)!: ...`) plus a
   `BREAKING CHANGE:` line in the body.
 
-On a feature branch this is encouraged but not enforced. **The squash
-commit on `dev` must follow it.**
+On a feature branch this is encouraged but not enforced. **Everything
+that lands on `dev` must follow it:** when squashing, the pull request
+title (GitHub uses it as the commit title); when rebasing, every commit.
 
 ## Versioning
 
@@ -137,7 +172,8 @@ standard library feature.
 
 ## Before merging into `dev`
 
-- `make check` passes (gofmt, golangci-lint, tests) — CI runs it too.
+- `make check` passes locally — CI runs it too, and blocks the merge if
+  it fails.
 - Follow the code style in `docs/spec.md`: descriptive names, no `Get`
   prefix on accessors.
-- The squash commit message follows the commit convention above.
+- The commits landing on `dev` follow the commit convention above.

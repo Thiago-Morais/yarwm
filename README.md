@@ -204,6 +204,6 @@ can't open the file: those sources exist only inside the container.
 ## Branching
 
 This repo uses **gitflow** — see [`CONTRIBUTING.md`](CONTRIBUTING.md).
-In short: work happens on `feature/*` branches merged into `dev`; releases
-are cut on `release/*` branches and merged into `main`, which only ever
-holds released versions.
+In short: work happens on `feature/*` branches merged into `dev` through
+pull requests; releases are cut on `release/*` branches and merged into
+`main`, which only ever holds released versions.
