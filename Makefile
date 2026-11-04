@@ -18,7 +18,7 @@ RUN := docker compose run --rm -T dev
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null)
 LDFLAGS := -X main.injectedVersion=$(VERSION)
 
-.PHONY: shell build run test vet lint fmt fmt-check check clean clean-cache image
+.PHONY: shell build run debug debug-server test vet lint fmt fmt-check check clean clean-cache image
 
 shell:
 	docker compose run --rm dev bash
@@ -29,6 +29,22 @@ build:
 # Pass arguments with ARGS, e.g. `make run ARGS="version"`.
 run:
 	$(RUN) go run -ldflags "$(LDFLAGS)" . $(ARGS)
+
+# Delve (`go tool dlv`, pinned by the `tool` line in go.mod).
+#
+# debug:         interactive debugger in this terminal,
+#                e.g. `make debug ARGS="version"`, then `break main.main`,
+#                `continue`, `next`, `step`, `print <name>`, `quit`.
+# debug-server:  headless debugger on 127.0.0.1:$(DEBUG_PORT) for an editor's
+#                DAP client to attach to (see "Debugging" in README.md).
+DEBUG_PORT ?= 2345
+
+debug:
+	docker compose run --rm dev go tool dlv debug . -- $(ARGS)
+
+debug-server:
+	docker compose run --rm --publish 127.0.0.1:$(DEBUG_PORT):2345 dev \
+		go tool dlv debug --headless --listen=:2345 --api-version=2 . -- $(ARGS)
 
 test:
 	$(RUN) go test ./...

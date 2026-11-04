@@ -46,3 +46,52 @@ vim.api.nvim_create_autocmd("BufWritePre", {
         end
     end,
 })
+
+-- Debugging with nvim-dap: `make debug-server` runs Delve inside the dev
+-- container on 127.0.0.1:2345 (or $DEBUG_PORT, same variable as the
+-- Makefile), and this adds a "yarwm: attach to make debug-server" entry to
+-- nvim-dap's configuration picker (:DapContinue) that attaches to it.
+--
+-- Two details make this different from a normal nvim-dap-go setup:
+--   * nvim-dap-go's "go" adapter always starts its own dlv on the host, so
+--     attaching to the container's dlv needs a plain "server" adapter.
+--   * The container sees the repo at /workspace; substitutePath maps it to
+--     the repo's real path here, so breakpoints and stack frames line up.
+--
+-- Registered on the first Go buffer, so nvim-dap is only loaded when you
+-- actually open Go code. Does nothing if nvim-dap isn't installed.
+vim.api.nvim_create_autocmd("FileType", {
+    group = project_group,
+    pattern = "go",
+    once = true,
+    callback = function()
+        local dap_available, dap = pcall(require, "dap")
+        if not dap_available or not dap.providers then
+            return
+        end
+
+        local debug_port = tonumber(vim.env.DEBUG_PORT) or 2345
+        dap.adapters.yarwm_container_delve = {
+            type = "server",
+            host = "127.0.0.1",
+            port = debug_port,
+        }
+
+        dap.providers.configs["yarwm"] = function(buffer_number)
+            if vim.bo[buffer_number].filetype ~= "go" then
+                return {}
+            end
+            return {
+                {
+                    name = "yarwm: attach to make debug-server",
+                    type = "yarwm_container_delve",
+                    request = "attach",
+                    mode = "remote",
+                    substitutePath = {
+                        { from = project_root, to = "/workspace" },
+                    },
+                },
+            }
+        end
+    end,
+})

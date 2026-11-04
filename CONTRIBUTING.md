@@ -119,6 +119,7 @@ weekly and opens a pull request against `dev` for each new release of:
 | Go toolchain | `docker/dev/Dockerfile` — `FROM golang:<version>-trixie` |
 | golangci-lint | `docker/dev/Dockerfile` — `FROM golangci/golangci-lint:<version>` |
 | GitHub Actions | `.github/workflows/check.yml` |
+| Delve (`go tool dlv`) | `go.mod` — the `tool` line and its `require` |
 | Go module dependencies | `go.mod` |
 
 CI runs `make check` on every Dependabot PR; if it's green, review and

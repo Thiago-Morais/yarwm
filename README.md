@@ -88,6 +88,8 @@ Dependabot). On the host you only need Docker (with the Compose plugin),
 make shell                # interactive shell inside the dev container
 make build                # compile ./build/yarwm
 make run ARGS="version"   # go run with arguments
+make debug ARGS="version" # Delve debugger in this terminal (see "Debugging")
+make debug-server         # Delve for your editor to attach to (see "Debugging")
 make test                 # go test ./...
 make lint                 # golangci-lint (config: .golangci.yml)
 make vet                  # go vet ./... (lint already includes it)
@@ -131,11 +133,59 @@ global ones while you work here:
   the EditorConfig extension.
 - **`.nvim.lua`** — project-local Neovim settings: `:make <target>` runs
   the Makefile, gopls is configured to match the project's checks, and Go
-  files are formatted with gopls on save. Neovim only loads it if your
+  files are formatted with gopls on save, and an nvim-dap entry attaches to
+  the containerized debugger (see "Debugging"). Neovim only loads it if your
   config sets `vim.o.exrc = true`, and asks you to `:trust` it first.
 
 `gopls` and other Go editor tooling are optional and need a Go toolchain
-on the host; building, testing and linting never do.
+on the host; building, testing, linting and debugging never do.
+
+## Debugging
+
+The debugger is [Delve](https://github.com/go-delve/delve), run inside the
+dev container as `go tool dlv` — its version is pinned in `go.mod` and kept
+current by Dependabot, so there's nothing to install.
+
+### In the terminal
+
+```sh
+make debug ARGS="version"
+```
+
+This builds yarwm with debug info and stops before `main` runs, at a
+`(dlv)` prompt:
+
+```
+(dlv) break main.main      # breakpoint at the start of main()
+(dlv) continue             # run until a breakpoint
+(dlv) next                 # step over
+(dlv) step                 # step into
+(dlv) print subcommand     # inspect a variable
+(dlv) quit
+```
+
+### From Neovim (nvim-dap)
+
+Needs [nvim-dap](https://github.com/mfussenegger/nvim-dap) and the
+`.nvim.lua` above. Delve itself runs in the container, so no host `dlv`
+(e.g. from Mason) is used.
+
+1. In a terminal, start the debug server (it waits for the editor):
+
+   ```sh
+   make debug-server ARGS="version"
+   ```
+
+2. In Neovim, set breakpoints, start debugging (`:DapContinue`) and pick
+   **yarwm: attach to make debug-server**. The program runs until it hits a
+   breakpoint; stop the session to end both.
+
+The server listens on `127.0.0.1:2345` only. To use another port, set
+`DEBUG_PORT` in your environment — the Makefile and `.nvim.lua` both read
+it.
+
+Stepping into the Go standard library or a dependency shows the frame but
+can't open the file: those sources exist only inside the container.
 
 ## Branching
 
