@@ -11,11 +11,6 @@
 
 local project_root = vim.fn.getcwd()
 
--- `:make check`, `:make lint`, `:make test` run the project's Makefile
--- targets in the dev container; errors (path:line:col: message) land in the
--- quickfix list, with paths relative to the repo root.
-vim.o.makeprg = "make"
-
 -- gopls runs on the host (editor tooling is not containerized), so these
 -- settings just keep it consistent with the project's own checks.
 -- vim.lsp.config needs Neovim 0.11+; older versions skip this.
