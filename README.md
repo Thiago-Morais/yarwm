@@ -12,6 +12,70 @@ The full design lives in [`docs/spec.md`](docs/spec.md).
 
 > **Status:** pre-alpha — repository scaffolding only, nothing usable yet.
 
+## Getting started
+
+### 1. Install the prerequisites
+
+You need Docker (with the Compose and Buildx plugins), `make` and `git`.
+No Go install is needed. For example, on Arch-based distros:
+
+```sh
+sudo pacman -S --needed docker docker-compose docker-buildx make git
+sudo systemctl enable --now docker
+sudo usermod -aG docker "$USER"    # then log out and back in
+```
+
+Check it with `docker compose version`.
+
+### 2. Clone and run the checks
+
+```sh
+git clone https://github.com/Thiago-Morais/yarwm
+cd yarwm
+make check
+```
+
+The first run builds the dev container, which takes a few minutes; later
+runs reuse it. A passing run ends with `0 issues.` from golangci-lint and
+`ok  github.com/Thiago-Morais/yarwm` from the tests.
+
+### 3. Build and run the binary
+
+```sh
+make build
+./build/yarwm version    # e.g. "yarwm v0.1.0", or a commit hash before the first tag
+./build/yarwm help
+```
+
+`build/` and `.cache/` should be owned by your user (`ls -l build .cache`).
+
+### 4. (Optional) Look around inside the container
+
+On the host:
+
+```sh
+make shell
+```
+
+Then, inside the container's shell:
+
+```sh
+go version               # the pinned Go toolchain
+golangci-lint version    # the pinned linter
+exit
+```
+
+### Testing someone's branch
+
+```sh
+git fetch origin
+git switch feature/<name>
+make check
+make build && ./build/yarwm version
+```
+
+CI runs the same checks on every push — see the repo's **Actions** tab.
+
 ## Development environment
 
 Every Go command runs inside a pinned Docker container, so every
