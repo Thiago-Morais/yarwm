@@ -20,29 +20,29 @@ vim.o.makeprg = "make"
 -- settings just keep it consistent with the project's own checks.
 -- vim.lsp.config needs Neovim 0.11+; older versions skip this.
 if vim.lsp.config then
-  vim.lsp.config("gopls", {
-    settings = {
-      gopls = {
-        -- Plain gofmt, the same formatter `make fmt` and `make check` use.
-        gofumpt = false,
-        -- golangci-lint already runs staticcheck (`make lint`); don't
-        -- report the same findings twice.
-        staticcheck = false,
-      },
-    },
-  })
+    vim.lsp.config("gopls", {
+        settings = {
+            gopls = {
+                -- Plain gofmt, the same formatter `make fmt` and `make check` use.
+                gofumpt = false,
+                -- golangci-lint already runs staticcheck (`make lint`); don't
+                -- report the same findings twice.
+                staticcheck = false,
+            },
+        },
+    })
 end
 
 -- Format Go files with gopls on save, matching `make fmt`, regardless of
 -- your global format-on-save setup.
 local project_group = vim.api.nvim_create_augroup("yarwm_project", { clear = true })
 vim.api.nvim_create_autocmd("BufWritePre", {
-  group = project_group,
-  pattern = project_root .. "/*.go",
-  callback = function(event)
-    local gopls_clients = vim.lsp.get_clients({ bufnr = event.buf, name = "gopls" })
-    if #gopls_clients > 0 then
-      vim.lsp.buf.format({ bufnr = event.buf, name = "gopls", timeout_ms = 2000 })
-    end
-  end,
+    group = project_group,
+    pattern = project_root .. "/*.go",
+    callback = function(event)
+        local gopls_clients = vim.lsp.get_clients({ bufnr = event.buf, name = "gopls" })
+        if #gopls_clients > 0 then
+            vim.lsp.buf.format({ bufnr = event.buf, name = "gopls", timeout_ms = 2000 })
+        end
+    end,
 })

@@ -9,12 +9,11 @@ end_of_line = lf
 insert_final_newline = true
 trim_trailing_whitespace = true
 indent_style = space
-indent_size = 2
+indent_size = 4
 
-# gofmt indents with tabs; a Makefile *must* use tabs.
+# gofmt indents with tabs; a Makefile *must* use tabs. Tabs display as 4.
 [{*.go,go.mod,Makefile}]
 indent_style = tab
-indent_size = 4
 
 # Trailing double spaces are a line break in Markdown.
 [*.md]

@@ -2,22 +2,22 @@
 version: "2"
 
 linters:
-  # errcheck, govet, ineffassign, staticcheck, unused
-  default: standard
-  enable:
-    - misspell
-    # Approximates the project's naming rule (docs/spec.md): no single-letter
-    # names, including loop variables, receivers and type parameters.
-    # Two-letter names like `ok` and `id` are allowed.
-    - varnamelen
-  settings:
-    varnamelen:
-      min-name-length: 2
-      # Strictest setting: flags a short name whose use spans 2+ lines.
-      # (0 means "use the default" of 5.) A name used only on the very next
-      # line still slips through — no standard linter bans short names
-      # outright, so review covers the rest.
-      max-distance: 1
-      check-receiver: true
-      check-return: true
-      check-type-param: true
+    # errcheck, govet, ineffassign, staticcheck, unused
+    default: standard
+    enable:
+        - misspell
+        # Approximates the project's naming rule (docs/spec.md): no single-letter
+        # names, including loop variables, receivers and type parameters.
+        # Two-letter names like `ok` and `id` are allowed.
+        - varnamelen
+    settings:
+        varnamelen:
+            min-name-length: 2
+            # Strictest setting: flags a short name whose use spans 2+ lines.
+            # (0 means "use the default" of 5.) A name used only on the very next
+            # line still slips through — no standard linter bans short names
+            # outright, so review covers the rest.
+            max-distance: 1
+            check-receiver: true
+            check-return: true
+            check-type-param: true

@@ -1,20 +1,20 @@
 services:
-  dev:
-    build:
-      # Only the dev image's own directory — the repo itself is mounted
-      # below at runtime, never copied into the image.
-      context: ./docker/dev
-      args:
-        DEV_UID: ${DEV_UID:-1000}
-        DEV_GID: ${DEV_GID:-1000}
-    image: yarwm-dev
-    # Rebuild before every run. Unchanged layers are cached, so this is
-    # normally a ~1s no-op, but a changed Dockerfile or UID can never leave
-    # you on a stale image.
-    pull_policy: build
-    working_dir: /workspace
-    volumes:
-      # The repo, including .cache/ (Go module + build caches) and build/.
-      - .:/workspace
-    stdin_open: true
-    tty: true
+    dev:
+        build:
+            # Only the dev image's own directory — the repo itself is mounted
+            # below at runtime, never copied into the image.
+            context: ./docker/dev
+            args:
+                DEV_UID: ${DEV_UID:-1000}
+                DEV_GID: ${DEV_GID:-1000}
+        image: yarwm-dev
+        # Rebuild before every run. Unchanged layers are cached, so this is
+        # normally a ~1s no-op, but a changed Dockerfile or UID can never leave
+        # you on a stale image.
+        pull_policy: build
+        working_dir: /workspace
+        volumes:
+            # The repo, including .cache/ (Go module + build caches) and build/.
+            - .:/workspace
+        stdin_open: true
+        tty: true
