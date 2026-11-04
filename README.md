@@ -85,16 +85,27 @@ Dependabot). On the host you only need Docker (with the Compose plugin),
 `make` and `git` — no local Go install.
 
 ```sh
+# setup
+make image                # build the dev image (the toolchain), runs automatically
 make shell                # interactive shell inside the dev container
-make build                # compile ./build/yarwm
-make run ARGS="version"   # go run with arguments
+
+# write
+make fmt                  # go fmt ./...
+make run ARGS="version"   # compile and run from source
 make debug ARGS="version" # Delve debugger in this terminal (see "Debugging")
 make debug-server         # Delve for your editor to attach to (see "Debugging")
+
+# verify
 make test                 # go test ./...
-make lint                 # golangci-lint (config: .golangci.yml)
 make vet                  # go vet ./... (lint already includes it)
-make fmt                  # go fmt ./...
-make check                # fmt check + lint + test — run before merging
+make lint                 # golangci-lint (config: .golangci.yml)
+make fmt-check            # fail if anything needs formatting
+make check                # fmt-check + lint + test — what CI runs
+
+# ship
+make build                # compile ./build/yarwm
+
+# tidy
 make clean                # remove build/
 make clean-cache          # remove .cache/ (re-downloaded on next run)
 ```
@@ -133,11 +144,12 @@ global ones while you work here:
 - **`.editorconfig`** — indentation, line endings, final newline, trailing
   whitespace for every file type. Neovim reads it natively; VS Code needs
   the EditorConfig extension.
-- **`.nvim.lua`** — project-local Neovim settings: `:make <target>` runs
-  the Makefile, gopls is configured to match the project's checks, and Go
-  files are formatted with gopls on save, and an nvim-dap entry attaches to
-  the containerized debugger (see "Debugging"). Neovim only loads it if your
-  config sets `vim.o.exrc = true`, and asks you to `:trust` it first.
+- **`.nvim.lua`** — project-local Neovim settings: gopls is configured to
+  match the project's checks, Go files are formatted with gopls on save,
+  and an nvim-dap entry attaches to the containerized debugger (see
+  "Debugging"). Neovim only loads it if your config sets
+  `vim.o.exrc = true`, and asks you to `:trust` it first. `make` targets
+  are meant for a regular terminal.
 
 `gopls` and other Go editor tooling are optional and need a Go toolchain
 on the host; building, testing, linting and debugging never do.
