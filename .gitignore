@@ -1,0 +1,12 @@
+# Build output (`make build`)
+/build/
+
+# Go module + build caches written by the dev container
+/.cache/
+
+# Local overrides for the dev container (DEV_UID/DEV_GID)
+.env
+
+# Editor / OS noise
+*.swp
+.DS_Store
