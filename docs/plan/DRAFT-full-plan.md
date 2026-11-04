@@ -1,6 +1,17 @@
 # Implementation plan
 
-This breaks [`spec.md`](spec.md) into small steps. Each step is one feature
+> [!WARNING]
+> **DRAFT — NOT REVIEWED. Do not implement from this file.**
+>
+> This is the whole plan in one place, kept only so the overall structure
+> can be seen while the phases are reviewed one at a time. The reviewed
+> version of each phase is its own file in this directory
+> ([README](README.md)); where they differ, the phase file wins.
+>
+> **Delete this file as soon as possible** — at the latest in the pull
+> request that adds the last phase file.
+
+This breaks [`spec.md`](../spec.md) into small steps. Each step is one feature
 branch and one pull request, small enough to finish in a sitting, and ends
 with a green `make check`. Steps are ordered so every one builds only on
 what came before.
