@@ -1,0 +1,27 @@
+# Runs the same `make` targets developers run locally, inside the same dev
+# container — so CI can't drift from the local toolchain.
+name: check
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Full history and tags, so `git describe` can produce the version.
+          fetch-depth: 0
+
+      - name: Format, lint and test
+        run: make check
+
+      - name: Build and smoke-test the binary
+        run: |
+          make build
+          ./build/yarwm version
