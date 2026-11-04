@@ -8,12 +8,7 @@ services:
     image: yarwm-dev:go1.27.3
     working_dir: /workspace
     volumes:
+      # The repo, including .cache/ (Go module + build caches) and build/.
       - .:/workspace
-      - go-module-cache:/home/dev/go/pkg/mod
-      - go-build-cache:/home/dev/.cache/go-build
     stdin_open: true
     tty: true
-
-volumes:
-  go-module-cache:
-  go-build-cache:

@@ -9,9 +9,6 @@ import (
 	"os"
 )
 
-// version is bumped on release branches (see CONTRIBUTING.md).
-const version = "0.0.0-dev"
-
 func main() {
 	if len(os.Args) < 2 {
 		printUsage()
@@ -20,7 +17,7 @@ func main() {
 
 	switch subcommand := os.Args[1]; subcommand {
 	case "version", "--version":
-		fmt.Println("yarwm", version)
+		fmt.Println("yarwm", currentVersion())
 	case "help", "-h", "--help":
 		printUsage()
 	default:

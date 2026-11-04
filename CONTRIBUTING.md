@@ -33,7 +33,7 @@ rebase onto `dev` (or merge `dev` in) if `dev` has moved before merging.
 ```sh
 git switch dev && git pull
 git switch -c release/<version>       # e.g. release/0.1.0
-# bump the version constant in main.go, final fixes only
+# final fixes and docs only — no version to bump, the tag below is the version
 make check
 git switch main && git merge --no-ff release/<version>
 git tag -a v<version> -m "v<version>"
@@ -51,6 +51,13 @@ the patch number) and merge back into both `main` and `dev`.
 
 [Semantic versioning](https://semver.org): `MAJOR.MINOR.PATCH`, tags are
 `v`-prefixed (`v0.1.0`). While pre-1.0, minor bumps may break things.
+
+The git tag **is** the version — nothing in the source is bumped by hand.
+`make build` runs `git describe --tags --always --dirty` on the host and
+injects the result, so `yarwm version` prints e.g. `v0.1.0` on a tag,
+`v0.1.0-3-g257be6f` three commits later, or `...-dirty` with uncommitted
+changes. `go install github.com/Thiago-Morais/yarwm@v0.1.0` gets its version
+from the module system instead, without git.
 
 ## Before merging into `dev`
 

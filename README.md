@@ -14,28 +14,38 @@ The full design lives in [`docs/spec.md`](docs/spec.md).
 
 ## Development environment
 
-Everything builds and runs inside a pinned Docker container, so every
-contributor uses the exact same toolchain (**Go 1.27.3**). You only need
-Docker with the Compose plugin on the host — no local Go install.
+Every Go command runs inside a pinned Docker container, so every
+contributor uses the exact same toolchain (**Go 1.27.3**). On the host you
+only need Docker (with the Compose plugin), `make` and `git` — no local Go
+install. Editor tooling (e.g. `gopls`) stays on the host, set up however
+you like.
 
 ```sh
-make shell     # interactive shell inside the dev container
-make build     # compile ./bin/yarwm
-make test      # go test ./...
-make vet       # go vet ./...
-make fmt       # gofmt -w on the whole tree
-make check     # fmt check + vet + test (run before merging)
+make shell                # interactive shell inside the dev container
+make build                # compile ./build/yarwm
+make run ARGS="version"   # go run with arguments
+make test                 # go test ./...
+make vet                  # go vet ./...
+make fmt                  # go fmt ./...
+make check                # fmt check + vet + test (run before merging)
+make clean                # remove build/
+make clean-cache          # remove .cache/ (Go caches; re-downloaded on next run)
 ```
 
 Each target is a thin wrapper around `docker compose run --rm dev ...`, so
 anything not covered works directly, e.g.:
 
 ```sh
-docker compose run --rm dev go run . --help
+docker compose run --rm dev go list ./...
 ```
 
-The first run builds the image; Go's module and build caches live in named
-Docker volumes, so later runs are fast.
+The first run builds the image. Go's module and build caches are written
+to `.cache/` inside the repo (gitignored), so later runs are fast and the
+caches are ordinary files you can see and delete.
+
+**Version:** the git tag is the version. `make build` injects
+`git describe --tags --always --dirty` from the host; the container never
+calls git itself. See [`CONTRIBUTING.md`](CONTRIBUTING.md#versioning).
 
 **File ownership:** the container runs as UID/GID 1000 by default so files
 it creates in the repo belong to you. If your host user isn't 1000, set
