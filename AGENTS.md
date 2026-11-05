@@ -44,8 +44,12 @@ make run ARGS="version"
 
 ## Git
 
-- Gitflow: branch `feature/<name>` from `dev`, open a pull request into
-  `dev`. Never commit to `dev` or `main` directly.
+- Gitflow: branch `feature/<name>` from `dev`, never from another feature
+  branch. Open a pull request into `dev`. Never commit to `dev` or `main`
+  directly.
+- **Never force push, to any branch.** Don't rebase or amend commits that
+  are already pushed; to bring in new `dev` changes, merge `dev` into your
+  branch.
 - Commits follow Conventional Commits with the types listed in
   `CONTRIBUTING.md`.
 - **Push your branch and open the pull request, but don't merge it.** The
