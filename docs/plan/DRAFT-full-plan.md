@@ -52,10 +52,11 @@ later steps that use it.
   `math/rand/v2`, seeded in tests with `rand.New(rand.NewPCG(1, 2))`), and
   the wallpaper backend (an interface, faked in tests).
 
-  ```go
-  func Rotate(now time.Time, random *rand.Rand, display Displayer) error // testable
-  func Rotate() error // calls time.Now() inside: a test can't control it
-  ```
+    ```go
+    func Rotate(now time.Time, random *rand.Rand, display Displayer) error // testable
+    func Rotate() error // calls time.Now() inside: a test can't control it
+    ```
+
 - **Comments** follow the comment rule in `CONTRIBUTING.md`. The comments
   inside this plan's code snippets are spec for you, the implementer —
   don't copy them into the code.
@@ -77,41 +78,41 @@ The spec leaves these open. Each is filled in here so no step has to guess;
 the step that depends on it is listed. Change any of them before that step
 starts, and fold them into `spec.md` once settled.
 
-| # | Topic | Decision | Used in |
-|---|---|---|---|
-| D1 | Tag values | `quality` and `frequency` are integers 1–10; anything else is rejected | 10 |
-| D2 | Untagged frequency | A wallpaper with no `frequency` counts as **5** (the middle) | 10, 16 |
-| D3 | Untagged quality | Eligible when no quality filter is active; excluded by any active filter (spec §8) | 16 |
-| D4 | `base_f` default | **2** — each frequency point doubles the odds | 5 |
-| D5 | `skip_penalty_seconds` default | **1800** (three default intervals) | 5 |
-| D6 | Never-shown age | A wallpaper never shown counts as last shown `screen_time_max_days` ago (30 days by default): a strong but finite boost | 15 |
-| D7 | Repeats | The wallpaper on screen is excluded from the pool, unless it's the only candidate | 16 |
-| D8 | Library rescans | The library (directory listing + `stat`) is rescanned before every pick. Content hashes are cached in a **`library_index.json`** state file (path → size, mtime, hash), so only new or changed files are hashed | 9, 21 |
-| D9 | Concurrent writes | The daemon and CLI commands are separate processes writing the same files. Every state change holds an exclusive lock on a `lock` file in the state directory (`flock`) for its whole read-modify-write | 4, 11+ |
-| D10 | Corrupt state files | A JSON file that fails to parse is an **error**, never silently replaced (replacing it would wipe the data) | 3 |
-| D11 | Midnight | Tick alignment counts from **local** midnight | 24 |
-| D12 | Buckets | Keys are UTC dates (`2006-01-02`); bucket starts are aligned to the Unix epoch in `screen_time_days_per_bucket` steps. A show's whole duration goes to the bucket containing its start. A bucket counts toward screen time — and survives pruning — while its **start** is within `screen_time_max_days` of now. Screen time filters by the window when reading, since pruning only happens on close-out | 14 |
-| D13 | Daemon start | `yarwm start` re-displays `recent[0]` right away if there is one (the screen is usually blank after login) without counting it as a rotation; otherwise it does a real rotation. Then it waits for the next aligned tick | 26 |
-| D14 | Single daemon | A second `yarwm start` refuses to run while one is already running (non-blocking lock on `daemon.lock`) | 26 |
-| D15 | `query_next_image` when stale | Recomputes the pick and **saves** it, so the printed path is what the next rotation shows | 23, 30 |
-| D16 | Bare `yarwm` | Prints help, as now; the daemon is `yarwm start` | 7 |
-| D17 | Backend calls | No shell; `{path}` is replaced inside every argument; wait for exit with a 30-second timeout; a non-zero exit is an error carrying stderr | 17 |
-| D18 | Quality filter flags | `--quality N`, `--quality-min N`, `--quality-max N` on `next`, `redo`, `skip` and `start`. In the config: a `[default_quality_filter]` table with `exact`, `min`, `max` | 1, 18 |
-| D19 | `tag-bulk` scope and pattern | Candidates are all wallpapers currently in the library, tagged or not. `--pattern` without `/` matches the file name; with `/`, the path relative to `library_path`. An unset quality never matches a quality filter; frequency filters use the effective frequency (D2) | 12 |
-| D20 | `rebucket` | `yarwm rebucket` only reports what would change; `yarwm rebucket --force` applies it, asking for confirmation when buckets would be split (`--yes` skips the prompt) | 32 |
-| D21 | Image types | `.jpg`, `.jpeg`, `.png`, `.webp`, `.gif`, `.bmp` (case-insensitive) | 8 |
-| D22 | Monitors | One wallpaper shared by all monitors (spec §11 default) | — |
+| #   | Topic                          | Decision                                                                                                                                                                                                                                                                                                                                                                                                 | Used in |
+| --- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| D1  | Tag values                     | `quality` and `frequency` are integers 1–10; anything else is rejected                                                                                                                                                                                                                                                                                                                                   | 10      |
+| D2  | Untagged frequency             | A wallpaper with no `frequency` counts as **5** (the middle)                                                                                                                                                                                                                                                                                                                                             | 10, 16  |
+| D3  | Untagged quality               | Eligible when no quality filter is active; excluded by any active filter (spec §8)                                                                                                                                                                                                                                                                                                                       | 16      |
+| D4  | `base_f` default               | **2** — each frequency point doubles the odds                                                                                                                                                                                                                                                                                                                                                            | 5       |
+| D5  | `skip_penalty_seconds` default | **1800** (three default intervals)                                                                                                                                                                                                                                                                                                                                                                       | 5       |
+| D6  | Never-shown age                | A wallpaper never shown counts as last shown `screen_time_max_days` ago (30 days by default): a strong but finite boost                                                                                                                                                                                                                                                                                  | 15      |
+| D7  | Repeats                        | The wallpaper on screen is excluded from the pool, unless it's the only candidate                                                                                                                                                                                                                                                                                                                        | 16      |
+| D8  | Library rescans                | The library (directory listing + `stat`) is rescanned before every pick. Content hashes are cached in a **`library_index.json`** state file (path → size, mtime, hash), so only new or changed files are hashed                                                                                                                                                                                          | 9, 21   |
+| D9  | Concurrent writes              | The daemon and CLI commands are separate processes writing the same files. Every state change holds an exclusive lock on a `lock` file in the state directory (`flock`) for its whole read-modify-write                                                                                                                                                                                                  | 4, 11+  |
+| D10 | Corrupt state files            | A JSON file that fails to parse is an **error**, never silently replaced (replacing it would wipe the data)                                                                                                                                                                                                                                                                                              | 3       |
+| D11 | Midnight                       | Tick alignment counts from **local** midnight                                                                                                                                                                                                                                                                                                                                                            | 24      |
+| D12 | Buckets                        | Keys are UTC dates (`2006-01-02`); bucket starts are aligned to the Unix epoch in `screen_time_days_per_bucket` steps. A show's whole duration goes to the bucket containing its start. A bucket counts toward screen time — and survives pruning — while its **start** is within `screen_time_max_days` of now. Screen time filters by the window when reading, since pruning only happens on close-out | 14      |
+| D13 | Daemon start                   | `yarwm start` re-displays `recent[0]` right away if there is one (the screen is usually blank after login) without counting it as a rotation; otherwise it does a real rotation. Then it waits for the next aligned tick                                                                                                                                                                                 | 26      |
+| D14 | Single daemon                  | A second `yarwm start` refuses to run while one is already running (non-blocking lock on `daemon.lock`)                                                                                                                                                                                                                                                                                                  | 26      |
+| D15 | `query_next_image` when stale  | Recomputes the pick and **saves** it, so the printed path is what the next rotation shows                                                                                                                                                                                                                                                                                                                | 23, 30  |
+| D16 | Bare `yarwm`                   | Prints help, as now; the daemon is `yarwm start`                                                                                                                                                                                                                                                                                                                                                         | 7       |
+| D17 | Backend calls                  | No shell; `{path}` is replaced inside every argument; wait for exit with a 30-second timeout; a non-zero exit is an error carrying stderr                                                                                                                                                                                                                                                                | 17      |
+| D18 | Quality filter flags           | `--quality N`, `--quality-min N`, `--quality-max N` on `next`, `redo`, `skip` and `start`. In the config: a `[default_quality_filter]` table with `exact`, `min`, `max`                                                                                                                                                                                                                                  | 1, 18   |
+| D19 | `tag-bulk` scope and pattern   | Candidates are all wallpapers currently in the library, tagged or not. `--pattern` without `/` matches the file name; with `/`, the path relative to `library_path`. An unset quality never matches a quality filter; frequency filters use the effective frequency (D2)                                                                                                                                 | 12      |
+| D20 | `rebucket`                     | `yarwm rebucket` only reports what would change; `yarwm rebucket --force` applies it, asking for confirmation when buckets would be split (`--yes` skips the prompt)                                                                                                                                                                                                                                     | 32      |
+| D21 | Image types                    | `.jpg`, `.jpeg`, `.png`, `.webp`, `.gif`, `.bmp` (case-insensitive)                                                                                                                                                                                                                                                                                                                                      | 8       |
+| D22 | Monitors                       | One wallpaper shared by all monitors (spec §11 default)                                                                                                                                                                                                                                                                                                                                                  | —       |
 
 ## Overview
 
-| Phase | Steps | Result |
-|---|---|---|
-| 1. Foundations | 1–7 | Building blocks: filter type, paths, JSON files, lock, config, CLI skeleton |
-| 2. Library and tags | 8–13 | **Milestone:** tag wallpapers (`tag`, `tag-bulk`) and migrate the old `quality-N` folders |
-| 3. Choosing a wallpaper | 14–18 | History, scoring, weighted pick, backend, session filter |
-| 4. Rotation | 19–23 | **Milestone:** `next` / `skip` change the wallpaper by hand |
-| 5. Daemon | 24–27 | **Milestone:** automatic rotation → **release v0.1.0** |
-| 6. Browsing and extras | 28–33 | `previous`/`undo`/`redo`/`clamp`, `status`, `rebucket`, docs → **release v0.2.0** |
+| Phase                   | Steps | Result                                                                                    |
+| ----------------------- | ----- | ----------------------------------------------------------------------------------------- |
+| 1. Foundations          | 1–7   | Building blocks: filter type, paths, JSON files, lock, config, CLI skeleton               |
+| 2. Library and tags     | 8–13  | **Milestone:** tag wallpapers (`tag`, `tag-bulk`) and migrate the old `quality-N` folders |
+| 3. Choosing a wallpaper | 14–18 | History, scoring, weighted pick, backend, session filter                                  |
+| 4. Rotation             | 19–23 | **Milestone:** `next` / `skip` change the wallpaper by hand                               |
+| 5. Daemon               | 24–27 | **Milestone:** automatic rotation → **release v0.1.0**                                    |
+| 6. Browsing and extras  | 28–33 | `previous`/`undo`/`redo`/`clamp`, `status`, `rebucket`, docs → **release v0.2.0**         |
 
 ---
 
@@ -261,14 +262,14 @@ func (c Config) Validate() error
 func (c Config) Interval() time.Duration
 ```
 
-- **Defaults** (spec §8 + decisions): `library_path` = `$(xdg-user-dir
-  PICTURES)/Wallpapers`, falling back to `~/Pictures/Wallpapers` (compute
+- **Defaults** (spec §8 + decisions): `library_path` =
+  `$(xdg-user-dir PICTURES)/Wallpapers`, falling back to `~/Pictures/Wallpapers` (compute
   it in its own function, so tests don't depend on the machine);
   `recursive` true; `interval` 600; `base_f` 2; `screen_time_days_per_bucket`
   1; `screen_time_max_days` 30; `decay_f` 0.7; `decay_scale_seconds` 3600;
   `skip_penalty_seconds` 1800; `history_depth` 10; no quality filter; no
   wallpaper command.
-- **Load** decodes the file *on top of* `Defaults()`, so missing keys keep
+- **Load** decodes the file _on top of_ `Defaults()`, so missing keys keep
   their default. A missing file returns `Defaults()`. Unknown keys are an
   error (use the decoder's metadata `Undecoded()`), so typos don't pass
   silently. Expand a leading `~/` in `library_path`.
@@ -301,7 +302,7 @@ both decode · unknown key → error · each validation rule · `~/` expansion.
 **Tests:** `EnsureFile` creates once and doesn't overwrite a modified file ·
 the template decodes without error as-is · **sync test**: take the lines
 before the first commented table header (`# [`), uncomment those matching
-`^# [a-z_]+ = `, decode the result, and compare to `Defaults()` — this fails
+`^# [a-z_]+ =\s`, decode the result, and compare to `Defaults()` — this fails
 whenever the template and the defaults drift apart.
 
 ### Step 7 — CLI skeleton
@@ -474,7 +475,7 @@ without writing · missing file → error · invalid value → exit 1.
 
 **Branch** `feature/tag-bulk` · **Commit** `feat(cli): add tag-bulk command` · **Spec** §1 · **Decisions** D19
 
-```
+```text
 yarwm tag-bulk [--pattern GLOB]
                [--filter-quality N | --filter-quality-min N --filter-quality-max N]
                [--filter-frequency N | --filter-frequency-min N --filter-frequency-max N]
@@ -503,7 +504,7 @@ nothing; `--yes` applies; missing `--set-*` → usage error.
 
 `cmd/migrate/main.go` — its own binary, deleted after use.
 
-```
+```text
 migrate [--dry-run] <old-root>
 ```
 
@@ -655,6 +656,7 @@ func New(command *config.BackendCommand) (Displayer, error)
 - A non-zero exit returns an error with the exit code and trimmed stderr.
 
 **Tests** (real processes, no backend needed):
+
 - a command that records its argument: program `sh`, arguments
   `["-c", "printf '%s' \"$1\" > \"$OUT\"", "sh", "{path}"]`, with `OUT`
   set by `test.Setenv` to a temp file → the file contains the image path
@@ -743,7 +745,7 @@ JSON round-trip matches the spec's shape.
 func Fingerprint(settings config.Config, activeFilter filter.Range, files ...string) (string, error)
 ```
 
-Callers pass `tags.json` and `library_index.json`. History is *not* passed:
+Callers pass `tags.json` and `library_index.json`. History is _not_ passed:
 it changes on every rotation, and the next pick is computed right after the
 history is saved, so it's already accounted for.
 
@@ -793,6 +795,7 @@ until then, if the pointer isn't 0, return an error.
 
 **Tests** (fake `Displayer` recording paths, fixed clock, seeded random,
 temp library and XDG dirs):
+
 - first rotation on empty state shows an image and fills `recent` and `next`
 - the second rotation shows exactly the previous `next`
 - tagging a file between rotations (fingerprint changes) → `next` is recomputed
@@ -983,6 +986,7 @@ Extend `Rotate` with the two remaining branches from spec §7:
 Remove step 21's "pointer must be 0" error.
 
 **Tests**, as scenarios from the spec:
+
 - `previous` twice then three rotations → walks back to 0 one step per rotation, then generates
 - `undo` twice then one rotation → clamps (`Recent[0]` becomes the peeked entry, newer ones dropped) and generates
 - `skip` after `previous` → clamps despite the flag
@@ -1015,7 +1019,7 @@ the following rotation shows the printed path.
 
 **Branch** `feature/status` · **Commit** `feat(cli): add status command` · **Spec** §7 (`status`)
 
-```
+```text
 current   /path/a.jpg  (quality 8, frequency 5)
 last      /path/b.jpg
 next      /path/c.jpg

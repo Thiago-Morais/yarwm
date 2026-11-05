@@ -6,7 +6,7 @@ Read the [plan README](README.md) first — it explains how to work
 through a step, the conventions, and the decisions referenced below
 (D1, D2, …). Spec sections (§) refer to [`spec.md`](../spec.md).
 
-### Step 1 — Quality filter type
+## Step 1 — Quality filter type
 
 **Branch** `feature/quality-filter` · **Commit** `feat(filter): add quality range filter` · **Spec** §1, §6 step 3 · **Decisions** D18
 
@@ -36,7 +36,7 @@ exact+min and min > max · `String` for each shape.
 
 **Done when** `make check` passes.
 
-### Step 2 — XDG paths
+## Step 2 — XDG paths
 
 **Branch** `feature/paths` · **Commit** `feat(paths): add xdg file locations` · **Spec** §1, §6, §7
 
@@ -65,7 +65,7 @@ Per the XDG spec, ignore `XDG_*` values that aren't absolute paths.
 **Tests** (`test.Setenv`): env var set → used · unset → home fallback ·
 relative value → ignored · `EnsureDirs` creates both.
 
-### Step 3 — JSON state files
+## Step 3 — JSON state files
 
 **Branch** `feature/jsonfile` · **Commit** `feat(jsonfile): add atomic json read and write` · **Spec** §9 · **Decisions** D10
 
@@ -87,7 +87,7 @@ func Write(path string, value any) error
 no error · invalid JSON → error mentioning the path · overwriting works ·
 no temp files left in the directory after `Write`.
 
-### Step 4 — File lock
+## Step 4 — File lock
 
 **Branch** `feature/filelock` · **Commit** `feat(filelock): add exclusive file lock` · **Decisions** D9, D14
 
@@ -111,7 +111,7 @@ read → modify → write of any state file.**
 returns `ErrLocked` while the first is held (two opens of the same file
 conflict even within one process) · succeeds again after `release`.
 
-### Step 5 — Config: defaults and loading
+## Step 5 — Config: defaults and loading
 
 **Branch** `feature/config` · **Commit** `feat(config): load config with defaults` · **Spec** §4, §6, §8 · **Decisions** D4, D5, D18
 
@@ -150,14 +150,14 @@ func (c Config) Validate() error
 func (c Config) Interval() time.Duration
 ```
 
-- **Defaults** (spec §8 + decisions): `library_path` = `$(xdg-user-dir
-  PICTURES)/Wallpapers`, falling back to `~/Pictures/Wallpapers` (compute
+- **Defaults** (spec §8 + decisions): `library_path` =
+  `$(xdg-user-dir PICTURES)/Wallpapers`, falling back to `~/Pictures/Wallpapers` (compute
   it in its own function, so tests don't depend on the machine);
   `recursive` true; `interval` 600; `base_f` 2; `screen_time_days_per_bucket`
   1; `screen_time_max_days` 30; `decay_f` 0.7; `decay_scale_seconds` 3600;
   `skip_penalty_seconds` 1800; `history_depth` 10; no quality filter; no
   wallpaper command.
-- **Load** decodes the file *on top of* `Defaults()`, so missing keys keep
+- **Load** decodes the file _on top of_ `Defaults()`, so missing keys keep
   their default. A missing file returns `Defaults()`. Unknown keys are an
   error (use the decoder's metadata `Undecoded()`), so typos don't pass
   silently. Expand a leading `~/` in `library_path`.
@@ -171,7 +171,7 @@ func (c Config) Interval() time.Duration
 overrides only its keys · `interval = 600` (integer) and `interval = 0.5`
 both decode · unknown key → error · each validation rule · `~/` expansion.
 
-### Step 6 — Config: first-run template
+## Step 6 — Config: first-run template
 
 **Branch** `feature/config-template` · **Commit** `feat(config): write commented default config on first run` · **Spec** §8
 
@@ -190,10 +190,10 @@ both decode · unknown key → error · each validation rule · `~/` expansion.
 **Tests:** `EnsureFile` creates once and doesn't overwrite a modified file ·
 the template decodes without error as-is · **sync test**: take the lines
 before the first commented table header (`# [`), uncomment those matching
-`^# [a-z_]+ = `, decode the result, and compare to `Defaults()` — this fails
+`^# [a-z_]+ =\s`, decode the result, and compare to `Defaults()` — this fails
 whenever the template and the defaults drift apart.
 
-### Step 7 — CLI skeleton
+## Step 7 — CLI skeleton
 
 **Branch** `feature/cli-skeleton` · **Commit** `refactor(cli): move command dispatch into internal/cli` · **Decisions** D16
 
