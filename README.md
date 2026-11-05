@@ -145,9 +145,10 @@ global ones while you work here:
   whitespace for every file type. Neovim reads it natively; VS Code needs
   the EditorConfig extension.
 - **`.nvim.lua`** — project-local Neovim settings: gopls is configured to
-  match the project's checks, Go files are formatted with gopls on save,
-  and an nvim-dap entry attaches to the containerized debugger (see
-  "Debugging"). Neovim only loads it if your config sets
+  match the project's checks, files are formatted on save with the same
+  formatters as `make fmt` (through conform.nvim if you have it, otherwise
+  gopls for Go), and an nvim-dap entry attaches to the containerized
+  debugger (see "Debugging"). Neovim only loads it if your config sets
   `vim.o.exrc = true`, and asks you to `:trust` it first. `make` targets
   are meant for a regular terminal.
 
