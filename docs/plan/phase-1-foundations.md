@@ -1,6 +1,6 @@
 # Phase 1 — Foundations
 
-Building blocks every later step uses: the filter type, file paths, JSON state files, the state lock, config loading, and the CLI skeleton. Nothing user-facing yet.
+Building blocks every later step uses: the filter type, file paths, JSON state files, the file lock, config loading, and the CLI skeleton. Nothing user-facing yet.
 
 Read the [plan README](README.md) first — it explains how to work
 through a step, the conventions, and the decisions referenced below
@@ -67,9 +67,9 @@ relative value → ignored · `EnsureDirs` creates both.
 
 ### Step 3 — JSON state files
 
-**Branch** `feature/jsonstore` · **Commit** `feat(jsonstore): add atomic json read and write` · **Spec** §9 · **Decisions** D10
+**Branch** `feature/jsonfile` · **Commit** `feat(jsonfile): add atomic json read and write` · **Spec** §9 · **Decisions** D10
 
-Create `internal/jsonstore/jsonstore.go`:
+Create `internal/jsonfile/jsonfile.go`:
 
 ```go
 // Read decodes path into target. A missing file is not an error:
@@ -87,11 +87,11 @@ func Write(path string, value any) error
 no error · invalid JSON → error mentioning the path · overwriting works ·
 no temp files left in the directory after `Write`.
 
-### Step 4 — State lock
+### Step 4 — File lock
 
-**Branch** `feature/statelock` · **Commit** `feat(statelock): add exclusive state lock` · **Decisions** D9, D14
+**Branch** `feature/filelock` · **Commit** `feat(filelock): add exclusive file lock` · **Decisions** D9, D14
 
-Create `internal/statelock/statelock.go` using `syscall.Flock`:
+Create `internal/filelock/filelock.go` using `syscall.Flock`:
 
 ```go
 // Acquire blocks until it holds an exclusive lock on path (created if

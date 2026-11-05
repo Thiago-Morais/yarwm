@@ -52,7 +52,8 @@ yarwm/
   internal/
     paths/                # XDG paths for every file below
     config/               # config.toml loading, defaults, first-run template
-    jsonstore/            # atomic read/write helpers for the JSON files
+    jsonfile/             # atomic read/write helpers for the JSON files
+    filelock/             # exclusive lock so the daemon and CLI never write over each other
     library/              # scanning, .ignore handling, content hashing
     tags/                 # tags.json, quality filter, bulk tag
     history/              # history.json, buckets, scoring formula

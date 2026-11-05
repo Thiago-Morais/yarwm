@@ -45,12 +45,20 @@ later steps that use it.
 - **Packages** live under `internal/` (see the layout in the spec). CLI
   commands live in `internal/cli`, one file per command; `main.go` only
   calls `cli.Run`.
-- **Testable by construction.** Anything time-, randomness- or
-  process-dependent takes it as a parameter: the current time
-  (`now time.Time` or `now func() time.Time`), the random source
-  (`*rand.Rand` from `math/rand/v2`, seeded in tests with
-  `rand.New(rand.NewPCG(1, 2))`), and the wallpaper backend (an interface,
-  faked in tests).
+- **Dependency injection for time, randomness and the backend.** Code
+  never reaches for them itself; it receives them as parameters, so tests
+  can pass fixed ones: the current time (`now time.Time` or
+  `now func() time.Time`), the random source (`*rand.Rand` from
+  `math/rand/v2`, seeded in tests with `rand.New(rand.NewPCG(1, 2))`), and
+  the wallpaper backend (an interface, faked in tests).
+
+  ```go
+  func Rotate(now time.Time, random *rand.Rand, display Displayer) error // testable
+  func Rotate() error // calls time.Now() inside: a test can't control it
+  ```
+- **Comments** follow the comment rule in `CONTRIBUTING.md`. The comments
+  inside this plan's code snippets are spec for you, the implementer —
+  don't copy them into the code.
 - **Tests never touch your real files.** Every test that reads or writes
   state calls `test.Setenv("XDG_CONFIG_HOME", test.TempDir())` and the same
   for `XDG_STATE_HOME`, and builds libraries under `test.TempDir()`.
@@ -170,9 +178,9 @@ relative value → ignored · `EnsureDirs` creates both.
 
 ### Step 3 — JSON state files
 
-**Branch** `feature/jsonstore` · **Commit** `feat(jsonstore): add atomic json read and write` · **Spec** §9 · **Decisions** D10
+**Branch** `feature/jsonfile` · **Commit** `feat(jsonfile): add atomic json read and write` · **Spec** §9 · **Decisions** D10
 
-Create `internal/jsonstore/jsonstore.go`:
+Create `internal/jsonfile/jsonfile.go`:
 
 ```go
 // Read decodes path into target. A missing file is not an error:
@@ -190,11 +198,11 @@ func Write(path string, value any) error
 no error · invalid JSON → error mentioning the path · overwriting works ·
 no temp files left in the directory after `Write`.
 
-### Step 4 — State lock
+### Step 4 — File lock
 
-**Branch** `feature/statelock` · **Commit** `feat(statelock): add exclusive state lock` · **Decisions** D9, D14
+**Branch** `feature/filelock` · **Commit** `feat(filelock): add exclusive file lock` · **Decisions** D9, D14
 
-Create `internal/statelock/statelock.go` using `syscall.Flock`:
+Create `internal/filelock/filelock.go` using `syscall.Flock`:
 
 ```go
 // Acquire blocks until it holds an exclusive lock on path (created if
@@ -448,7 +456,7 @@ func (store Store) Frequency(hash string) int // DefaultFrequency when unset
 
 - Resolve `<file>` to an absolute path; it must be an existing regular
   file. Hash it with `library.HashFile`.
-- With `--quality` and/or `--frequency`: under the state lock (step 4),
+- With `--quality` and/or `--frequency`: under the file lock (step 4),
   load tags, `Set`, save, and print the result
   (`tagged /path/x.jpg: quality 7, frequency 5 (default)`).
 - With neither flag: print the file's current tags and change nothing.
@@ -482,7 +490,7 @@ yarwm tag-bulk [--pattern GLOB]
 - Show the match count and the first 10 paths, then ask
   `Apply to N wallpapers? [y/N]` on stdin unless `--yes`. Zero matches →
   say so, exit 0.
-- Apply all changes under one state lock, one save.
+- Apply all changes under one file lock, one save.
 
 **Tests:** `Match` with pattern on file name · pattern with `/` against the
 relative path · quality filter excludes untagged · frequency filter uses the
@@ -505,7 +513,7 @@ migrate [--dry-run] <old-root>
   `qualityFromRelativePath(relativePath string) (quality int, found bool)`).
   Files with no such component are listed as skipped.
 - Hash each file and `Set` its quality only (frequency untouched) under one
-  state lock and one save. `--dry-run` prints what it would do and writes
+  file lock and one save. `--dry-run` prints what it would do and writes
   nothing.
 - Print a summary: tagged, skipped, out-of-range quality.
 
@@ -765,7 +773,7 @@ type RotateOptions struct {
 func Rotate(ctx context.Context, dependencies Dependencies, options RotateOptions) (Shown, error)
 ```
 
-Steps, all under the state lock:
+Steps, all under the file lock:
 
 1. Load selection state, tags, history; resolve the active filter (step 18).
 2. Scan the library and refresh the index; save the index if it changed (D8).
@@ -830,7 +838,7 @@ wallpaper.
   Clear error when empty ("nothing shown yet").
 - `next` → the precomputed pick, refreshed first if its fingerprint is
   stale. Put that refresh in `internal/selection` as
-  `EnsureNext(ctx, dependencies) (NextPick, error)` — under the state lock,
+  `EnsureNext(ctx, dependencies) (NextPick, error)` — under the file lock,
   it recomputes and **saves** (D15); step 30 reuses it.
 - A literal file named `current` is reachable as `./current`.
 
@@ -926,7 +934,7 @@ config, then add `exec-once = /path/to/yarwm start` to your Hyprland config.
 The daemon re-reads every JSON file each tick. Cheap at 10-minute
 intervals, wasteful at sub-second ones.
 
-- Add a cache to `internal/jsonstore`:
+- Add a cache to `internal/jsonfile`:
   `type CachedFile[T any]` with `Load(path string) (T, error)` that keeps
   the decoded value with the file's size + mtime and decodes again only when
   they change. Writes through the store update the cache.
@@ -1044,7 +1052,7 @@ next bucket's start, and for the newest bucket the days from its start to
 
 `yarwm rebucket`: report how many wallpapers would change and whether any
 split happens; change nothing. `yarwm rebucket --force`: apply under the
-state lock; if anything splits, ask `[y/N]` unless `--yes`.
+file lock; if anything splits, ask `[y/N]` unless `--yes`.
 
 **Tests:** merging 1-day into 7-day buckets is exact · splitting 7-day
 into 1-day spreads evenly · total screen time is conserved in both

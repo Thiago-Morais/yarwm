@@ -14,7 +14,7 @@ reviewed — don't start its steps.
 
 | Phase | File | Steps | Result |
 |---|---|---|---|
-| 1. Foundations | `phase-1-foundations.md` | 1–7 | Filter type, paths, JSON files, state lock, config, CLI skeleton |
+| 1. Foundations | `phase-1-foundations.md` | 1–7 | Filter type, paths, JSON files, file lock, config, CLI skeleton |
 | 2. Library and tags | `phase-2-library-and-tags.md` | 8–13 | **Milestone:** tag wallpapers (`tag`, `tag-bulk`) and migrate the old `quality-N` folders |
 | 3. Choosing a wallpaper | `phase-3-choosing-a-wallpaper.md` | 14–18 | History, scoring, weighted pick, backend, session filter |
 | 4. Rotation | `phase-4-rotation.md` | 19–23 | **Milestone:** `next` / `skip` change the wallpaper by hand |
@@ -47,12 +47,20 @@ later steps that use it.
 - **Packages** live under `internal/` (see the layout in the spec). CLI
   commands live in `internal/cli`, one file per command; `main.go` only
   calls `cli.Run`.
-- **Testable by construction.** Anything time-, randomness- or
-  process-dependent takes it as a parameter: the current time
-  (`now time.Time` or `now func() time.Time`), the random source
-  (`*rand.Rand` from `math/rand/v2`, seeded in tests with
-  `rand.New(rand.NewPCG(1, 2))`), and the wallpaper backend (an interface,
-  faked in tests).
+- **Dependency injection for time, randomness and the backend.** Code
+  never reaches for them itself; it receives them as parameters, so tests
+  can pass fixed ones: the current time (`now time.Time` or
+  `now func() time.Time`), the random source (`*rand.Rand` from
+  `math/rand/v2`, seeded in tests with `rand.New(rand.NewPCG(1, 2))`), and
+  the wallpaper backend (an interface, faked in tests).
+
+  ```go
+  func Rotate(now time.Time, random *rand.Rand, display Displayer) error // testable
+  func Rotate() error // calls time.Now() inside: a test can't control it
+  ```
+- **Comments** follow the comment rule in `CONTRIBUTING.md`. The comments
+  inside this plan's code snippets are spec for you, the implementer —
+  don't copy them into the code.
 - **Tests never touch your real files.** Every test that reads or writes
   state calls `test.Setenv("XDG_CONFIG_HOME", test.TempDir())` and the same
   for `XDG_STATE_HOME`, and builds libraries under `test.TempDir()`.
