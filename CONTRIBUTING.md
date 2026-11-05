@@ -2,23 +2,23 @@
 
 ## Branch model (gitflow)
 
-| Branch | Branches off | Merges into | Purpose |
-|---|---|---|---|
-| `main` | — | — | Released versions only. Every commit on `main` is a tagged release. |
-| `dev` | `main` | — | Integration branch. Always builds and passes `make check`. |
-| `feature/<name>` | `dev` | `dev` | One feature or change. |
-| `release/<version>` | `dev` | `main`, then `main` back into `dev` | Stabilizing a release: fixes and docs only, no new features. |
-| `hotfix/<version>` | `main` | `main`, then `main` back into `dev` | Urgent fix to a released version. |
+| Branch              | Branches off | Merges into                         | Purpose                                                             |
+| ------------------- | ------------ | ----------------------------------- | ------------------------------------------------------------------- |
+| `main`              | —            | —                                   | Released versions only. Every commit on `main` is a tagged release. |
+| `dev`               | `main`       | —                                   | Integration branch. Always builds and passes `make check`.          |
+| `feature/<name>`    | `dev`        | `dev`                               | One feature or change.                                              |
+| `release/<version>` | `dev`        | `main`, then `main` back into `dev` | Stabilizing a release: fixes and docs only, no new features.        |
+| `hotfix/<version>`  | `main`       | `main`, then `main` back into `dev` | Urgent fix to a released version.                                   |
 
 Everything reaches `main` and `dev` through a pull request — GitHub
 rejects direct pushes (see [Repository rules](#repository-rules)).
 
 ## Merge strategy
 
-| Into | Allowed | Use |
-|---|---|---|
-| `dev` | Squash, Rebase, Merge | **Squash** by default |
-| `main` | Merge only | — |
+| Into   | Allowed               | Use                   |
+| ------ | --------------------- | --------------------- |
+| `dev`  | Squash, Rebase, Merge | **Squash** by default |
+| `main` | Merge only            | —                     |
 
 **Features are squashed by default.** Commit as often and as messily as
 you like on a feature branch; it lands on `dev` as one clean commit. Each
@@ -71,11 +71,11 @@ git push -u origin release/<version>
 1. Pull request `release/<version>` → `main`, **Create a merge commit**.
 2. Tag the merge on `main`:
 
-   ```sh
-   git switch main && git pull
-   git tag -a v<version> -m "v<version>"
-   git push origin v<version>
-   ```
+    ```sh
+    git switch main && git pull
+    git tag -a v<version> -m "v<version>"
+    git push origin v<version>
+    ```
 
 3. Pull request `main` → `dev`, **Create a merge commit**, so `dev`
    contains the release merge and any fixes made on the release branch.
@@ -91,11 +91,11 @@ current version with the patch number + 1).
 Configured on GitHub under **Settings → Rules → Rulesets** (not stored in
 the repo):
 
-| Ruleset | Type | Target | Rules |
-|---|---|---|---|
-| dev | branch | `dev` | Restrict deletions; require a pull request (0 approvals; Squash, Rebase, Merge allowed); require status check `check`; block force pushes |
-| main | branch | `main` | Same, but only Merge allowed |
-| releases | tag | `v*` | Restrict deletions; block force pushes — a published version never moves |
+| Ruleset  | Type   | Target | Rules                                                                                                                                     |
+| -------- | ------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| dev      | branch | `dev`  | Restrict deletions; require a pull request (0 approvals; Squash, Rebase, Merge allowed); require status check `check`; block force pushes |
+| main     | branch | `main` | Same, but only Merge allowed                                                                                                              |
+| releases | tag    | `v*`   | Restrict deletions; block force pushes — a published version never moves                                                                  |
 
 The repository admin may bypass the branch rulesets **for pull requests
 only** — e.g. to merge with a red CI in an emergency — but can't push
@@ -105,22 +105,22 @@ directly either.
 
 [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/):
 
-```
+```text
 <type>(<optional scope>): <description>
 
 <optional body: why, not what>
 ```
 
-| Type | For |
-|---|---|
-| `feat` | a new user-facing capability |
-| `fix` | a bug fix |
-| `refactor` | code change with no behavior change |
-| `test` | adding or fixing tests only |
-| `docs` | documentation only |
-| `build` | dev container, Makefile, `go.mod`, dependencies |
-| `ci` | GitHub Actions workflows |
-| `chore` | anything else that doesn't touch the program (e.g. `.gitignore`) |
+| Type       | For                                                              |
+| ---------- | ---------------------------------------------------------------- |
+| `feat`     | a new user-facing capability                                     |
+| `fix`      | a bug fix                                                        |
+| `refactor` | code change with no behavior change                              |
+| `test`     | adding or fixing tests only                                      |
+| `docs`     | documentation only                                               |
+| `build`    | dev container, Makefile, `go.mod`, dependencies                  |
+| `ci`       | GitHub Actions workflows                                         |
+| `chore`    | anything else that doesn't touch the program (e.g. `.gitignore`) |
 
 - Scope is the package or area, e.g. `feat(history): bucket screen time by day`.
 - Description: imperative, lower case, no trailing period — "add", not
@@ -149,13 +149,15 @@ from the module system instead, without git.
 Nothing is bumped by hand. [Dependabot](.github/dependabot.yml) checks
 weekly and opens a pull request against `dev` for each new release of:
 
-| Tool | Pinned in |
-|---|---|
-| Go toolchain | `docker/dev/Dockerfile` — `FROM golang:<version>-trixie` |
-| golangci-lint | `docker/dev/Dockerfile` — `FROM golangci/golangci-lint:<version>` |
-| GitHub Actions | `.github/workflows/check.yml` |
-| Delve (`go tool dlv`) | `go.mod` — the `tool` line and its `require` |
-| Go module dependencies | `go.mod` |
+| Tool                   | Pinned in                                                         |
+| ---------------------- | ----------------------------------------------------------------- |
+| Go toolchain           | `docker/dev/Dockerfile` — `FROM golang:<version>-trixie`          |
+| golangci-lint          | `docker/dev/Dockerfile` — `FROM golangci/golangci-lint:<version>` |
+| Node (runs Prettier)   | `docker/dev/Dockerfile` — `FROM node:<version>-trixie-slim`       |
+| Prettier               | `package.json` (exact version) and `package-lock.json`            |
+| GitHub Actions         | `.github/workflows/check.yml`                                     |
+| Delve (`go tool dlv`)  | `go.mod` — the `tool` line and its `require`                      |
+| Go module dependencies | `go.mod`                                                          |
 
 CI runs `make check` on every Dependabot PR; if it's green, review and
 merge it like any feature (squash). The dev image rebuilds itself on the
@@ -175,6 +177,10 @@ standard library feature.
 **Names** are descriptive; single letters only where the context makes
 them obvious. Accessors have no `Get` prefix (`ScreenTime()`, not
 `GetScreenTime()`).
+
+**Formatting** is never a choice: gofmt for Go, Prettier (default settings
+plus `.editorconfig`) for Markdown, YAML and anything else it supports.
+`make fmt` applies both; `make check` fails on unformatted files.
 
 **Comments** are a last resort: if code needs one to be understood, first
 try better names, a smaller function, or a test that shows the behaviour.

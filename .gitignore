@@ -1,6 +1,7 @@
 /build/
 
 /.cache/
+/node_modules/
 
 # docker compose reads DEV_UID/DEV_GID overrides from it.
 .env

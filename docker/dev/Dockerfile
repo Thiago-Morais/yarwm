@@ -2,9 +2,16 @@
 # (see "Tool versions" in CONTRIBUTING.md).
 FROM golangci/golangci-lint:v2.15.0 AS golangci-lint
 
+FROM node:26.13.0-trixie-slim AS node
+
 FROM golang:1.27.3-trixie
 
 COPY --from=golangci-lint /usr/bin/golangci-lint /usr/local/bin/golangci-lint
+
+# Node only runs Prettier (pinned in package.json).
+COPY --from=node /usr/local/bin/node /usr/local/bin/node
+COPY --from=node /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
+RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm
 
 # Matches the host user's UID/GID so files written into the mounted repo stay
 # owned by them. A host group with that GID may already exist in the image.
@@ -19,13 +26,15 @@ USER dev
 # GOTOOLCHAIN=local       the pinned image is the only Go anyone builds with
 # CGO_ENABLED=0           static binary, independent of the container's libc
 # GOFLAGS=-buildvcs=false the Makefile injects the version from the host's git
-# *CACHE                  inside the repo (gitignored) instead of hidden volumes
+# *CACHE, *_cache         inside the repo (gitignored) instead of hidden volumes
 ENV GOTOOLCHAIN=local \
     CGO_ENABLED=0 \
     GOFLAGS=-buildvcs=false \
     GOMODCACHE=/workspace/.cache/go-mod \
     GOCACHE=/workspace/.cache/go-build \
-    GOLANGCI_LINT_CACHE=/workspace/.cache/golangci-lint
+    GOLANGCI_LINT_CACHE=/workspace/.cache/golangci-lint \
+    NPM_CONFIG_CACHE=/workspace/.cache/npm \
+    NPM_CONFIG_UPDATE_NOTIFIER=false
 
 WORKDIR /workspace
 

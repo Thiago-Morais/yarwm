@@ -4,6 +4,7 @@
 letter by letter.
 
 ## Overview
+
 Build a lightweight CLI tool/daemon that automatically rotates the desktop
 wallpaper on a Linux system (primarily used under Hyprland/Wayland), calling
 out to whatever external wallpaper-setting program the user configures
@@ -24,15 +25,15 @@ not require systemd).**
 a good fit for the "runs on a potato" priority. The standard library
 covers almost everything:
 
-| Need | Package |
-|---|---|
-| JSON state files | `encoding/json` |
-| Content hashing | `crypto/sha256` |
-| Glob matching (`.ignore`, `tag-bulk --pattern`) | `path/filepath` (`filepath.Match`) |
-| Running the wallpaper backend | `os/exec` |
-| Scheduling / sleep | `time` |
-| Weighted random draw | `math/rand/v2` + a small cumulative-sum helper (no stdlib equivalent of a weighted choice; ~10 lines) |
-| CLI subcommands | `flag` with one `flag.FlagSet` per subcommand and a small hand-written dispatcher on `os.Args[1]` |
+| Need                                            | Package                                                                                               |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| JSON state files                                | `encoding/json`                                                                                       |
+| Content hashing                                 | `crypto/sha256`                                                                                       |
+| Glob matching (`.ignore`, `tag-bulk --pattern`) | `path/filepath` (`filepath.Match`)                                                                    |
+| Running the wallpaper backend                   | `os/exec`                                                                                             |
+| Scheduling / sleep                              | `time`                                                                                                |
+| Weighted random draw                            | `math/rand/v2` + a small cumulative-sum helper (no stdlib equivalent of a weighted choice; ~10 lines) |
+| CLI subcommands                                 | `flag` with one `flag.FlagSet` per subcommand and a small hand-written dispatcher on `os.Args[1]`     |
 
 The only external dependency is **`github.com/BurntSushi/toml`** for the
 config file. TOML (rather than JSON) is kept for the config specifically
@@ -44,7 +45,7 @@ enough for `flag.FlagSet`, and it keeps the dependency list at one.
 
 **Suggested layout:**
 
-```
+```text
 yarwm/
   go.mod
   main.go                 # subcommand dispatch only
@@ -78,14 +79,15 @@ Each wallpaper gets two independent, manually-assigned integer tags
   frequency, and vice versa.
 
 Storage:
+
 - JSON file keyed by file content hash (e.g. SHA-256), not filename or path
   — must survive the user freely moving files between directories under
   `library_path` for organizational purposes.
-  - Suggested location: `~/.config/yarwm/tags.json`
-  - Structure:
-    `{ "<sha256>": { "quality": <int>, "frequency": <int>, "cache_path": "<last known path>" } }`
-    (keep `cache_path` as a cache/hint only — always re-resolve/verify against the
-    live filesystem, don't trust it blindly if the file moved).
+    - Suggested location: `~/.config/yarwm/tags.json`
+    - Structure:
+      `{ "<sha256>": { "quality": <int>, "frequency": <int>, "cache_path": "<last known path>" } }`
+      (keep `cache_path` as a cache/hint only — always re-resolve/verify against the
+      live filesystem, don't trust it blindly if the file moved).
 - `tag [<file>|current|last|next] [--quality N] [--frequency N]` — sets/
   updates either or both values for a single wallpaper. If no target is
   given, defaults to `current`. `current`/`last`/`next` are keyword
@@ -98,6 +100,7 @@ Storage:
 `selection_state` file (see "Selection state" under section 7) instead of
 scanning the tags/history JSON — no reason to read through 600 entries to
 answer "what's current":
+
 - `current` — `selection_state.recent[0]`, whatever's on screen right now.
 - `last` — `selection_state.recent[1]`, whatever was on screen immediately
   before `current`. Same position `previous`/`undo` (no argument,
@@ -114,7 +117,7 @@ dedicated tool worth it: retagging a filtered set of existing wallpapers
 600 files. A `tag-bulk` subcommand with independent filter and target
 options:
 
-```
+```text
 yarwm tag-bulk --pattern "*.jpg" \
   --filter-quality 4 --filter-frequency 2 \
   --set-quality 5 --set-frequency 3
@@ -138,7 +141,7 @@ yarwm tag-bulk --pattern "*.jpg" \
 Provide a **separate standalone program** (`cmd/migrate`, built as its own
 binary), not a subcommand of the main tool, that ingests the user's existing directory structure (`quality-1/`,
 `quality-1/quality-2/`, `quality-1/quality-2/quality-3/`, etc. — nested such
-that a wallpaper's *actual* quality is the deepest `quality-N` directory it
+that a wallpaper's _actual_ quality is the deepest `quality-N` directory it
 lives under) and converts it into flat `quality` tag entries in the tags
 JSON (leave `frequency` unset/default, since the old scheme has no
 equivalent). Being a separate program with its own `main` package means
@@ -233,27 +236,27 @@ the simplest and safest default:
 - Old buckets stay exactly as they are, at whatever size they were created
   with. They still get pruned normally once they fall entirely outside
   `screen_time_max_days` — nothing special there.
-- New show events use the *current* `screen_time_days_per_bucket` going
+- New show events use the _current_ `screen_time_days_per_bucket` going
   forward, so a wallpaper's history can end up with a handful of
   differently-sized buckets after a config change (some old and wide, some
   new and narrow). This is harmless: `screen_time(wallpaper)` is just a sum
   over whatever buckets currently exist within the window, and that sum is
   exactly correct regardless of whether the buckets are a uniform size —
-  bucket *count* was only ever about bounding memory, never about
+  bucket _count_ was only ever about bounding memory, never about
   correctness, so there's no need to force it back to the "expected" count
   at all.
-- A `--force` flag on a maintenance/rebucket command triggers an *actual*
+- A `--force` flag on a maintenance/rebucket command triggers an _actual_
   consolidation pass that resamples all of a wallpaper's (or the whole
   library's) buckets into the current config's exact bucket layout. This is
   the one path where data actually gets rewritten under an assumption, so
   it's the one path that needs a warning: merging into fewer, wider buckets
   is always exact (sum of what's inside), but splitting into more, narrower
-  buckets has no record of *when within* an old bucket its time was
+  buckets has no record of _when within_ an old bucket its time was
   accumulated, so it has to be redistributed under an assumption — treat
   each old bucket's total as a uniform daily rate
   (`total_seconds / bucket_length_days`), then for each new bucket sum
   `rate × overlapping_days` across whatever old buckets it overlaps. Total
-  screen-time is always conserved either way; only the *split* direction is
+  screen-time is always conserved either way; only the _split_ direction is
   inventing information about timing, and only `--force` triggers a split
   at all — so warn and require confirmation specifically when a forced
   rebucket would split, not on ordinary config changes and not on forced
@@ -269,6 +272,7 @@ the simplest and safest default:
 ```
 
 Each rotation:
+
 1. **Persist `last_shown` immediately when a new wallpaper is set**, not
    deferred until the next tick's close-out step — this matters for crash/
    power-loss recovery (see "Robustness" below).
@@ -291,7 +295,7 @@ Each rotation:
    `frequencyWeight`, `ageFactor`, `screenTime`, `freshnessFactor`,
    `score` — use `math.Pow` for the exponentials.)
 
-```
+```text
 frequency_weight(frequency)  = base_f ^ frequency
                              # PURE exponential — frequency 10 is always
                              # strictly the heaviest weight, no plateau.
@@ -340,7 +344,7 @@ process crashes, the "close out the previous show event" step (2, above)
 never gets to run for whatever wallpaper was on screen at the time — its
 trailing screen-time would otherwise be silently lost, and there'd be no
 record of when it started being shown. This is exactly why step 1 writes
-`last_shown` to disk *at selection time*, immediately, rather than only
+`last_shown` to disk _at selection time_, immediately, rather than only
 recording it as part of the later close-out: as long as `last_shown` for
 the currently-displayed wallpaper is always on disk, the next time the
 tool runs (after a reboot, whenever that is) it can still close out that
@@ -364,7 +368,7 @@ quality filter, wallpaper backend command + arguments.
 
 **Two families of cursor movement, both non-mutating on their own** — see
 "Selection state" below for the shared mechanism. What differs between them
-is only what happens the *next time a real rotation event fires* (the
+is only what happens the _next time a real rotation event fires_ (the
 automatic tick, or a forward move with nothing left to walk to) while the
 cursor isn't at `recent[0]`:
 
@@ -397,7 +401,7 @@ cursor isn't at `recent[0]`:
   one," not patient browsing, so it doesn't make sense for it to gently
   respect an in-progress walk.
 - `clamp` — manually commits the current cursor position as the new
-  `recent[0]` (same clamp logic as above) *without* also generating new
+  `recent[0]` (same clamp logic as above) _without_ also generating new
   content — useful when you've `undo`'d or `previous`'d to something you
   like and want it to become the real current without also picking
   something new on top of it, which is what `next`/`redo` falling into
@@ -416,20 +420,22 @@ cursor isn't at `recent[0]`:
   optional quality filter override (e.g. `--quality-min 7`) — applies
   once it reaches the point of actually generating fresh content, not to
   plain cursor movement. Fallback chain, in order:
-  1. Explicit filter given on this invocation → use it, and save it as the
-     new last-used filter.
-  2. No filter given → use the last-used filter, if one has ever been
-     saved.
-  3. No last-used filter saved yet → use the configured default filter
-     from the config file.
-  The last-used filter is stored in a small plain state file, e.g.
-  `~/.local/state/yarwm/session_filter` — the same kind of
-  file as tags/history, just persisted directly rather than tied to any
-  process's lifetime. Every `next` invocation that actually
-  triggers generation (automatic tick inside the daemon, or a manual call
-  from the terminal — each a separate OS process) just reads this one
-  file for the fallback and writes to it when an explicit filter is
-  given. No daemon/CLI communication needed at all.
+    1. Explicit filter given on this invocation → use it, and save it as the
+       new last-used filter.
+    2. No filter given → use the last-used filter, if one has ever been
+       saved.
+    3. No last-used filter saved yet → use the configured default filter
+       from the config file.
+
+    The last-used filter is stored in a small plain state file, e.g.
+    `~/.local/state/yarwm/session_filter` — the same kind of
+    file as tags/history, just persisted directly rather than tied to any
+    process's lifetime. Every `next` invocation that actually
+    triggers generation (automatic tick inside the daemon, or a manual call
+    from the terminal — each a separate OS process) just reads this one
+    file for the fallback and writes to it when an explicit filter is
+    given. No daemon/CLI communication needed at all.
+
 - The **daemon startup** command (whatever launches the long-running loop)
   should accept the same optional quality filter override (e.g.
   `yarwm start --quality-min 7`). If given, it follows the
@@ -452,24 +458,25 @@ cursor isn't at `recent[0]`:
 - `status` — a plain-text summary of runtime state, read entirely from
   `selection_state` plus a couple of other already-existing small state
   files (no new files needed for this):
-  - **Current**: `recent[0]`'s path, plus its `quality`/`frequency` tags
-    (from `tags.json`).
-  - **Last**: `recent[1]`'s path, if `history_depth` allows one.
-  - **Next**: `next.cache_path` — the precomputed pick, shown as-is (this
-    tool has no reason to hide it as a surprise, it's a personal utility).
-  - **Browsing**: if `browse_pointer != 0`, show the pointer's position
-    and — since `clamp_on_next_rotation` answers this directly — whether
-    the next rotation will clamp or gently walk back. Omit this section
-    entirely when `browse_pointer == 0`, since there's nothing to report.
-  - **Active quality filter**: read from `session_filter` (the
-    quality-filter fallback chain above) if set, otherwise the configured
-    default.
-  - **Paused**: yes/no, from the `paused` state file.
-  - **Time left**: reuse `time_left`'s own logic directly (both the
-    numeric and human-readable forms) rather than duplicating it.
-  No config dump needed beyond the active quality filter — the rest of
-  `status` is about *current runtime state*, not static configuration,
-  which the user can already read straight from the config file.
+    - **Current**: `recent[0]`'s path, plus its `quality`/`frequency` tags
+      (from `tags.json`).
+    - **Last**: `recent[1]`'s path, if `history_depth` allows one.
+    - **Next**: `next.cache_path` — the precomputed pick, shown as-is (this
+      tool has no reason to hide it as a surprise, it's a personal utility).
+    - **Browsing**: if `browse_pointer != 0`, show the pointer's position
+      and — since `clamp_on_next_rotation` answers this directly — whether
+      the next rotation will clamp or gently walk back. Omit this section
+      entirely when `browse_pointer == 0`, since there's nothing to report.
+    - **Active quality filter**: read from `session_filter` (the
+      quality-filter fallback chain above) if set, otherwise the configured
+      default.
+    - **Paused**: yes/no, from the `paused` state file.
+    - **Time left**: reuse `time_left`'s own logic directly (both the
+      numeric and human-readable forms) rather than duplicating it.
+
+    No config dump needed beyond the active quality filter — the rest of
+    `status` is about _current runtime state_, not static configuration,
+    which the user can already read straight from the config file.
 
 **Selection state.** A single small file, e.g.
 `~/.local/state/yarwm/selection_state.json`, tracks recent show history and
@@ -481,13 +488,17 @@ tags/history JSON for a single value:
 
 ```json
 {
-  "recent": [
-    { "hash": "<sha256>", "cache_path": "<path>" },
-    { "hash": "<sha256>", "cache_path": "<path>" }
-  ],
-  "next": { "hash": "<sha256>", "cache_path": "<path>", "snapshot_fingerprint": "<hash>" },
-  "browse_pointer": 0,
-  "clamp_on_next_rotation": false
+    "recent": [
+        { "hash": "<sha256>", "cache_path": "<path>" },
+        { "hash": "<sha256>", "cache_path": "<path>" }
+    ],
+    "next": {
+        "hash": "<sha256>",
+        "cache_path": "<path>",
+        "snapshot_fingerprint": "<hash>"
+    },
+    "browse_pointer": 0,
+    "clamp_on_next_rotation": false
 }
 ```
 
@@ -495,20 +506,20 @@ tags/history JSON for a single value:
 `recent[0]` is `current`, `recent[1]` is one step back (what `last`
 resolves to), `recent[2]` two steps back, and so on, capped at
 `history_depth` entries (config value, default e.g. `10` — this is for a
-handful of steps of back-navigation, not an audit log; an *unbounded*
+handful of steps of back-navigation, not an audit log; an _unbounded_
 sequential log would reintroduce the exact unbounded-growth problem
 bucketing was built to avoid in section 6, so this stays deliberately
-small). `recent` only ever contains what was *actually shown* — the
+small). `recent` only ever contains what was _actually shown_ — the
 tentative `next` pick never enters it unless/until real generation
 actually happens.
 
 `clamp_on_next_rotation` is a plain boolean, not a record of which command
 ran — this is a deliberate architecture choice, not just a naming one:
-each browse command sets it directly to whatever's correct for *itself*
+each browse command sets it directly to whatever's correct for _itself_
 the moment it runs (`undo`/`redo` set it `true`, `previous`/`next` set it
 `false`), so the rotation logic never needs to know command names or
 "families" at all — it just reads one boolean. That keeps the clamp
-*policy* decision inside the browse commands (where it belongs, since
+_policy_ decision inside the browse commands (where it belongs, since
 that's the thing that knows which kind of browsing just happened) rather
 than duplicated as a lookup table inside the rotation logic. It also
 happens to be exactly the question a `status` command wants to answer
@@ -544,30 +555,30 @@ rotation is due — it's precomputed ahead of time and just sitting in
   happens instead — see below.
 - **Real rotation** (an automatic tick firing, or a forward command
   hitting the point above): read `selection_state`.
-  - If `browse_pointer == 0` (nothing was being browsed): proceed exactly
-    as before — compute a fresh snapshot fingerprint; if it matches
-    `next.snapshot_fingerprint`, hand `next.cache_path` straight to the
-    backend immediately (the whole reason latency drops to ~0, the pick
-    was already done); otherwise recompute fresh. *Only after* handoff:
-    close out `recent[0]`'s history (section 6, step 2), push the used
-    pick onto the front of `recent` (dropping the oldest past
-    `history_depth`), compute the *following* pick, and write it as the
-    new `next` object (`hash`, `cache_path`, and its fresh
-    `snapshot_fingerprint` together).
-  - If `browse_pointer != 0` and `clamp_on_next_rotation == false`:
-    **don't** clamp — just move `browse_pointer` one step toward `0` and
-    display `recent[browse_pointer]`. No history close-out, no
-    generation, no hash check. Real generation only resumes on a later
-    rotation once the pointer naturally reaches `0` this way.
-  - If `browse_pointer != 0` and `clamp_on_next_rotation == true` (or
-    `skip` was called, which always takes this branch regardless of the
-    stored value): **clamp** — `recent[browse_pointer]` becomes the new
-    `recent[0]`, everything between old `recent[0]` and that point is
-    dropped from `recent` (this only trims the navigation buffer, it
-    never touches already-recorded screen-time in `history.json`),
-    `browse_pointer` resets to `0`, `clamp_on_next_rotation` resets to
-    `false`, and generation proceeds immediately as in the first case
-    above.
+    - If `browse_pointer == 0` (nothing was being browsed): proceed exactly
+      as before — compute a fresh snapshot fingerprint; if it matches
+      `next.snapshot_fingerprint`, hand `next.cache_path` straight to the
+      backend immediately (the whole reason latency drops to ~0, the pick
+      was already done); otherwise recompute fresh. _Only after_ handoff:
+      close out `recent[0]`'s history (section 6, step 2), push the used
+      pick onto the front of `recent` (dropping the oldest past
+      `history_depth`), compute the _following_ pick, and write it as the
+      new `next` object (`hash`, `cache_path`, and its fresh
+      `snapshot_fingerprint` together).
+    - If `browse_pointer != 0` and `clamp_on_next_rotation == false`:
+      **don't** clamp — just move `browse_pointer` one step toward `0` and
+      display `recent[browse_pointer]`. No history close-out, no
+      generation, no hash check. Real generation only resumes on a later
+      rotation once the pointer naturally reaches `0` this way.
+    - If `browse_pointer != 0` and `clamp_on_next_rotation == true` (or
+      `skip` was called, which always takes this branch regardless of the
+      stored value): **clamp** — `recent[browse_pointer]` becomes the new
+      `recent[0]`, everything between old `recent[0]` and that point is
+      dropped from `recent` (this only trims the navigation buffer, it
+      never touches already-recorded screen-time in `history.json`),
+      `browse_pointer` resets to `0`, `clamp_on_next_rotation` resets to
+      `false`, and generation proceeds immediately as in the first case
+      above.
 - `clamp` — runs just the clamp step above (if `browse_pointer != 0`)
   without the generation step, i.e. commits wherever you've browsed to as
   the new `recent[0]` without also picking something new on top of it.
@@ -588,7 +599,7 @@ config value needs a sane built-in default, with one deliberate exception:
 
 - `recursive`: `true`
 - `library_path`: a conventional fallback, e.g. `$(xdg-user-dir
-  PICTURES)/Wallpapers` (or `~/Pictures/Wallpapers` if that helper isn't
+PICTURES)/Wallpapers` (or `~/Pictures/Wallpapers` if that helper isn't
   available) — won't necessarily point at the user's real library on a
   fresh install, but means the tool starts up and reports "no images
   found" rather than erroring on a missing config.
@@ -638,12 +649,10 @@ reasoning as the "keep old buckets by default" approach in section 6:
 don't invent/maintain something on the user's behalf that might go stale
 without them knowing.
 
-
-
 ## 9. State storage: JSON, not a database
 
 ~600 records comfortably fit in memory as plain Go maps/structs. SQLite was
-considered and rejected as overkill: scoring needs to scan the *whole*
+considered and rejected as overkill: scoring needs to scan the _whole_
 filtered pool every tick anyway, so a database wouldn't save a query — the
 full data still needs to end up in application code either way. Revisit
 only if the library ever grows into the tens of thousands.
@@ -665,49 +674,49 @@ only if the library ever grows into the tens of thousands.
   measured with a Python dict-of-buckets prototype — Go structs and maps
   are more compact, so treat these as upper bounds:
 
-  **Buckets per wallpaper**, fixed at 600 wallpapers (the earlier
-  bucket-count sweep, kept for reference — note the default moved from 5
-  buckets to 30 since this was first measured, see the second table below
-  for that):
+    **Buckets per wallpaper**, fixed at 600 wallpapers (the earlier
+    bucket-count sweep, kept for reference — note the default moved from 5
+    buckets to 30 since this was first measured, see the second table below
+    for that):
 
-  | buckets/wallpaper | total memory (600 wallpapers) |
-  |---:|---:|
-  | 1 | ~0.05 MB |
-  | 3 | ~0.16 MB |
-  | 5 | ~0.27 MB |
-  | 10 | ~0.55 MB |
-  | 50 | ~2.7 MB |
-  | 100 | ~5.5 MB |
-  | 500 | ~27 MB |
-  | 1,000 | ~55 MB |
-  | 5,000 | ~274 MB |
+    | buckets/wallpaper | total memory (600 wallpapers) |
+    | ----------------: | ----------------------------: |
+    |                 1 |                      ~0.05 MB |
+    |                 3 |                      ~0.16 MB |
+    |                 5 |                      ~0.27 MB |
+    |                10 |                      ~0.55 MB |
+    |                50 |                       ~2.7 MB |
+    |               100 |                       ~5.5 MB |
+    |               500 |                        ~27 MB |
+    |             1,000 |                        ~55 MB |
+    |             5,000 |                       ~274 MB |
 
-  **Library size**, fixed at 30 buckets/wallpaper (the current default:
-  `screen_time_days_per_bucket=1`, `screen_time_max_days=30`):
+    **Library size**, fixed at 30 buckets/wallpaper (the current default:
+    `screen_time_days_per_bucket=1`, `screen_time_max_days=30`):
 
-  | wallpapers | total memory (30 buckets each) |
-  |---:|---:|
-  | 100 | ~0.27 MB |
-  | 300 | ~0.82 MB |
-  | 600 (the actual library size) | ~1.6 MB |
-  | 1,000 | ~2.7 MB |
-  | 2,000 | ~5.5 MB |
-  | 5,000 | ~13.7 MB |
-  | 10,000 | ~27.4 MB |
+    |                    wallpapers | total memory (30 buckets each) |
+    | ----------------------------: | -----------------------------: |
+    |                           100 |                       ~0.27 MB |
+    |                           300 |                       ~0.82 MB |
+    | 600 (the actual library size) |                        ~1.6 MB |
+    |                         1,000 |                        ~2.7 MB |
+    |                         2,000 |                        ~5.5 MB |
+    |                         5,000 |                       ~13.7 MB |
+    |                        10,000 |                       ~27.4 MB |
 
-  So yes, the 1-day/30-day default (30 buckets) checks out fine — even at
-  10,000 wallpapers (way beyond the ~600 this was designed for) it's still
-  under 30MB. Tags file adds a flat ~0.2MB on top, roughly independent of
-  bucket count. In short: it takes on the order of **hundreds to
-  low-thousands of buckets per wallpaper**, or **tens of thousands of
-  wallpapers** at 30 buckets each, before this becomes a real number on
-  modest hardware — nowhere near what any reasonable
-  `screen_time_days_per_bucket` / `screen_time_max_days` setting would produce.
-  This is also why bucketing matters at all in the first place —
-  the *raw per-event* log this replaced, at a 5-second rotation interval
-  over a 6-month window, measured at ~580MB, which would be a real problem
-  on low-end hardware; bucketing avoids that regardless of how the two
-  config values are tuned.
+    So yes, the 1-day/30-day default (30 buckets) checks out fine — even at
+    10,000 wallpapers (way beyond the ~600 this was designed for) it's still
+    under 30MB. Tags file adds a flat ~0.2MB on top, roughly independent of
+    bucket count. In short: it takes on the order of **hundreds to
+    low-thousands of buckets per wallpaper**, or **tens of thousands of
+    wallpapers** at 30 buckets each, before this becomes a real number on
+    modest hardware — nowhere near what any reasonable
+    `screen_time_days_per_bucket` / `screen_time_max_days` setting would produce.
+    This is also why bucketing matters at all in the first place —
+    the _raw per-event_ log this replaced, at a 5-second rotation interval
+    over a 6-month window, measured at ~580MB, which would be a real problem
+    on low-end hardware; bucketing avoids that regardless of how the two
+    config values are tuned.
 
 ## 11. Open items for you to decide during implementation
 

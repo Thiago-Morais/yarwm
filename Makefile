@@ -9,6 +9,8 @@ RUN := docker compose run --rm -T dev
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null)
 LDFLAGS := -X main.injectedVersion=$(VERSION)
 
+PRETTIER := $(RUN) node_modules/.bin/prettier
+
 # .nvim.lua reads the same variable.
 DEBUG_PORT ?= 2345
 
@@ -20,13 +22,19 @@ DEBUG_PORT ?= 2345
 dev-image:
 	docker compose build --quiet
 
+# Order-only on dev-image: it always runs, which would reinstall every time.
+node_modules: package.json package-lock.json | dev-image
+	$(RUN) npm ci --no-audit --no-fund
+	touch node_modules
+
 shell: dev-image
 	docker compose run --rm dev bash
 
 # --- write ------------------------------------------------------------------
 
-fmt: dev-image
+fmt: dev-image node_modules
 	$(RUN) golangci-lint fmt
+	$(PRETTIER) --write --log-level warn .
 
 run: dev-image
 	$(RUN) go run -ldflags "$(LDFLAGS)" . $(ARGS)
@@ -49,8 +57,10 @@ vet: dev-image
 lint: dev-image
 	$(RUN) golangci-lint run ./...
 
-fmt-check: dev-image
+# gofmt -l only lists unformatted files; this fails when the list isn't empty.
+fmt-check: dev-image node_modules
 	$(RUN) golangci-lint fmt --diff
+	$(PRETTIER) --check --log-level warn .
 
 check: fmt-check lint test
 
@@ -62,7 +72,7 @@ build: dev-image
 # --- tidy -------------------------------------------------------------------
 
 clean:
-	rm -rf build
+	rm -rf build node_modules
 
 # Go makes the module cache read-only on purpose, so a plain rm fails.
 clean-cache:
