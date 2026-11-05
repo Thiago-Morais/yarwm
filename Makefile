@@ -26,7 +26,7 @@ shell: dev-image
 # --- write ------------------------------------------------------------------
 
 fmt: dev-image
-	$(RUN) go fmt ./...
+	$(RUN) golangci-lint fmt
 
 run: dev-image
 	$(RUN) go run -ldflags "$(LDFLAGS)" . $(ARGS)
@@ -49,9 +49,8 @@ vet: dev-image
 lint: dev-image
 	$(RUN) golangci-lint run ./...
 
-# gofmt -l only lists unformatted files; this fails when the list isn't empty.
 fmt-check: dev-image
-	$(RUN) sh -c 'unformatted="$$(gofmt -l $$(go list -f "{{.Dir}}" ./...))"; if [ -n "$$unformatted" ]; then echo "needs gofmt:"; echo "$$unformatted"; exit 1; fi'
+	$(RUN) golangci-lint fmt --diff
 
 check: fmt-check lint test
 
