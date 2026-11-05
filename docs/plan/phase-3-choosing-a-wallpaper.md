@@ -6,7 +6,7 @@ Read the [plan README](README.md) first — it explains how to work
 through a step, the conventions, and the decisions referenced below
 (D1, D2, …). Spec sections (§) refer to [`spec.md`](../spec.md).
 
-### Step 14 — History and screen-time buckets
+## Step 14 — History and screen-time buckets
 
 **Branch** `feature/history` · **Commit** `feat(history): track screen time in day buckets` · **Spec** §6 · **Decisions** D12
 
@@ -47,7 +47,7 @@ start's bucket · `extraSeconds` is added · pruning drops old buckets ·
 never-shown → `CloseOut` is a no-op · mixed bucket sizes (after a config
 change) still sum correctly.
 
-### Step 15 — Scoring
+## Step 15 — Scoring
 
 **Branch** `feature/scoring` · **Commit** `feat(selection): add scoring formula` · **Spec** §6 step 4 · **Decisions** D6
 
@@ -77,7 +77,7 @@ score, all else equal · older → higher · more screen time → lower ·
 `FreshnessFactor(0, ...) == 1` · never-shown uses the configured age ·
 every score > 0.
 
-### Step 16 — Candidate pool and weighted pick
+## Step 16 — Candidate pool and weighted pick
 
 **Branch** `feature/weighted-pick` · **Commit** `feat(selection): pick from the pool by weighted random draw` · **Spec** §6 steps 3 and 5 · **Decisions** D2, D3, D7
 
@@ -111,7 +111,7 @@ candidate is picked about 3× as often as a score-1 one (assert within
 ±10%) · `BuildPool`: filter excludes untagged, no filter includes them,
 current excluded, current kept when it's the only one.
 
-### Step 17 — Wallpaper backend
+## Step 17 — Wallpaper backend
 
 **Branch** `feature/backend` · **Commit** `feat(backend): run the configured wallpaper command` · **Spec** §4 · **Decisions** D17
 
@@ -132,6 +132,7 @@ func New(command *config.BackendCommand) (Displayer, error)
 - A non-zero exit returns an error with the exit code and trimmed stderr.
 
 **Tests** (real processes, no backend needed):
+
 - a command that records its argument: program `sh`, arguments
   `["-c", "printf '%s' \"$1\" > \"$OUT\"", "sh", "{path}"]`, with `OUT`
   set by `test.Setenv` to a temp file → the file contains the image path
@@ -139,7 +140,7 @@ func New(command *config.BackendCommand) (Displayer, error)
 - `sleep 5` with a short context deadline → error
 - nil command → `config.ErrBackendNotConfigured`
 
-### Step 18 — Session filter
+## Step 18 — Session filter
 
 **Branch** `feature/session-filter` · **Commit** `feat(selection): remember the last explicit quality filter` · **Spec** §7 (quality filter fallback chain) · **Decisions** D18
 
