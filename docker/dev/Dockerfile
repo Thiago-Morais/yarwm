@@ -33,8 +33,8 @@ ENV GOTOOLCHAIN=local \
     GOMODCACHE=/workspace/.cache/go-mod \
     GOCACHE=/workspace/.cache/go-build \
     GOLANGCI_LINT_CACHE=/workspace/.cache/golangci-lint \
-    npm_config_cache=/workspace/.cache/npm \
-    npm_config_update_notifier=false
+    NPM_CONFIG_CACHE=/workspace/.cache/npm \
+    NPM_CONFIG_UPDATE_NOTIFIER=false
 
 WORKDIR /workspace
 
