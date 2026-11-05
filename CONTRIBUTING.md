@@ -172,7 +172,7 @@ standard library feature.
 
 ## Code style
 
-**Names** are descriptive; single letters only where Go convention makes
+**Names** are descriptive; single letters only where the context makes
 them obvious. Accessors have no `Get` prefix (`ScreenTime()`, not
 `GetScreenTime()`).
 
