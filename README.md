@@ -16,14 +16,16 @@ The full design lives in [`docs/spec.md`](docs/spec.md).
 
 ### 1. Install the prerequisites
 
-You need Docker (with the Compose and Buildx plugins), `make` and `git`.
-No Go install is needed. For example, on Arch-based distros:
+You need Docker with the Compose and Buildx plugins, `make` and `git`.
+No Go install is needed.
 
-```sh
-sudo pacman -S --needed docker docker-compose docker-buildx make git
-sudo systemctl enable --now docker
-sudo usermod -aG docker "$USER"    # then log out and back in
-```
+- Install Docker Engine by following
+  [Docker's install guide](https://docs.docker.com/engine/install/) for
+  your distro, or with your distro's own packages.
+- Then follow
+  [Linux post-installation steps](https://docs.docker.com/engine/install/linux-postinstall/)
+  so you can run `docker` without `sudo`.
+- Install `make` and `git` with your package manager.
 
 Check it with `docker compose version`.
 
