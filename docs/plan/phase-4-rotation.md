@@ -6,7 +6,7 @@ Read the [plan README](README.md) first — it explains how to work
 through a step, the conventions, and the decisions referenced below
 (D1, D2, …). Spec sections (§) refer to [`spec.md`](../spec.md).
 
-### Step 19 — Selection state
+## Step 19 — Selection state
 
 **Branch** `feature/selection-state` · **Commit** `feat(selection): add selection state with recent ring buffer` · **Spec** §7 (Selection state)
 
@@ -43,7 +43,7 @@ func (state *State) Clamp()                            // Recent = Recent[Browse
 first two entries and resets both fields · `Current` on empty state ·
 JSON round-trip matches the spec's shape.
 
-### Step 20 — Snapshot fingerprint
+## Step 20 — Snapshot fingerprint
 
 **Branch** `feature/fingerprint` · **Commit** `feat(selection): fingerprint the inputs of the next pick` · **Spec** §7 (`next.snapshot_fingerprint`)
 
@@ -57,14 +57,14 @@ JSON round-trip matches the spec's shape.
 func Fingerprint(settings config.Config, activeFilter filter.Range, files ...string) (string, error)
 ```
 
-Callers pass `tags.json` and `library_index.json`. History is *not* passed:
+Callers pass `tags.json` and `library_index.json`. History is _not_ passed:
 it changes on every rotation, and the next pick is computed right after the
 history is saved, so it's already accounted for.
 
 **Tests:** same inputs → same fingerprint · changing `base_f`, the filter,
 or touching a listed file each change it · a missing file is stable.
 
-### Step 21 — Rotation: generating a new wallpaper
+## Step 21 — Rotation: generating a new wallpaper
 
 **Branch** `feature/rotation` · **Commit** `feat(selection): rotate to a new wallpaper` · **Spec** §6 steps 1–5, §7 (real rotation, `browse_pointer == 0` branch) · **Decisions** D8
 
@@ -107,6 +107,7 @@ until then, if the pointer isn't 0, return an error.
 
 **Tests** (fake `Displayer` recording paths, fixed clock, seeded random,
 temp library and XDG dirs):
+
 - first rotation on empty state shows an image and fills `recent` and `next`
 - the second rotation shows exactly the previous `next`
 - tagging a file between rotations (fingerprint changes) → `next` is recomputed
@@ -117,7 +118,7 @@ temp library and XDG dirs):
 - the same wallpaper never shows twice in a row with 2+ images
 - empty library → `ErrEmptyPool`
 
-### Step 22 — `next` and `skip`
+## Step 22 — `next` and `skip`
 
 **Branch** `feature/next-skip` · **Commit** `feat(cli): add next and skip commands` · **Spec** §7
 
@@ -142,7 +143,7 @@ message.
 `~/.config/yarwm/config.toml`, then `./build/yarwm next` changes your
 wallpaper.
 
-### Step 23 — `tag` keyword targets
+## Step 23 — `tag` keyword targets
 
 **Branch** `feature/tag-keywords` · **Commit** `feat(cli): tag current, last and next by keyword` · **Spec** §1 (Tag target keywords) · **Decisions** D15
 
