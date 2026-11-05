@@ -38,8 +38,9 @@ make run ARGS="version"
   comments that restate the code; only "why" comments and Go doc comments.
   Comments inside the plan's code snippets are spec, not code to copy.
 - Don't add dependencies the spec or plan doesn't call for.
-- Don't edit tool versions (Dockerfile `FROM` lines, `go.mod` requires):
-  Dependabot owns them.
+- Don't bump versions by hand (Dockerfile `FROM` lines, existing `go.mod`
+  requires): Dependabot owns them. Adding a dependency the plan calls for
+  is fine.
 
 ## Git
 
