@@ -57,7 +57,6 @@ vet: dev-image
 lint: dev-image
 	$(RUN) golangci-lint run ./...
 
-# gofmt -l only lists unformatted files; this fails when the list isn't empty.
 fmt-check: dev-image node_modules
 	$(RUN) golangci-lint fmt --diff
 	$(PRETTIER) --check --log-level warn .
