@@ -170,10 +170,29 @@ Go version the code needs, and stays put when the toolchain is updated.
 Raise it only on purpose, when the code starts using a newer language or
 standard library feature.
 
+## Code style
+
+**Names** are descriptive; single letters only where the context makes
+them obvious. Accessors have no `Get` prefix (`ScreenTime()`, not
+`GetScreenTime()`).
+
+**Comments** are a last resort: if code needs one to be understood, first
+try better names, a smaller function, or a test that shows the behaviour.
+What stays:
+
+- **Why, not what.** A comment for a reason the code can't express: an
+  outside constraint, a workaround, a non-obvious consequence of changing
+  it. Never one that restates what the next lines do.
+- **Go doc comments** where Go convention expects them: the package
+  comment and exported names ([Go Doc Comments](https://go.dev/doc/comment)).
+  Keep them to what the name and signature don't already say.
+- Nothing commented out, no `TODO`s — open an issue instead.
+
+The same applies to the Makefile, Dockerfile and other config files.
+
 ## Before merging into `dev`
 
 - `make check` passes locally — CI runs it too, and blocks the merge if
   it fails.
-- Follow the code style in `docs/spec.md`: descriptive names, no `Get`
-  prefix on accessors.
+- Follow the code style above, comments included.
 - The commits landing on `dev` follow the commit convention above.

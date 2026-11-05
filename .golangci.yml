@@ -1,8 +1,6 @@
-# golangci-lint v2 config. Run with `make lint` (part of `make check`).
 version: "2"
 
 linters:
-    # errcheck, govet, ineffassign, staticcheck, unused
     default: standard
     enable:
         - misspell

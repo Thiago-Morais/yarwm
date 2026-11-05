@@ -1,35 +1,19 @@
--- Project-local Neovim settings for yarwm.
---
--- Loaded only if your own config enables it:
---     vim.o.exrc = true
--- The first time (and whenever this file changes) Neovim asks whether to
--- trust it — read it, then allow it, or run :trust.
---
--- Indentation, line endings etc. come from .editorconfig, which Neovim
--- reads natively; this file only adds what EditorConfig can't express.
--- Everything here applies to files inside this repo only.
-
 local project_root = vim.fn.getcwd()
 
--- gopls runs on the host (editor tooling is not containerized), so these
--- settings just keep it consistent with the project's own checks.
--- vim.lsp.config needs Neovim 0.11+; older versions skip this.
+-- vim.lsp.config needs Neovim 0.11+.
 if vim.lsp.config then
     vim.lsp.config("gopls", {
         settings = {
             gopls = {
-                -- Plain gofmt, the same formatter `make fmt` and `make check` use.
+                -- `make fmt-check` uses plain gofmt.
                 gofumpt = false,
-                -- golangci-lint already runs staticcheck (`make lint`); don't
-                -- report the same findings twice.
+                -- `make lint` already runs it; don't report findings twice.
                 staticcheck = false,
             },
         },
     })
 end
 
--- Format Go files with gopls on save, matching `make fmt`, regardless of
--- your global format-on-save setup.
 local project_group = vim.api.nvim_create_augroup("yarwm_project", { clear = true })
 vim.api.nvim_create_autocmd("BufWritePre", {
     group = project_group,
@@ -42,19 +26,9 @@ vim.api.nvim_create_autocmd("BufWritePre", {
     end,
 })
 
--- Debugging with nvim-dap: `make debug-server` runs Delve inside the dev
--- container on 127.0.0.1:2345 (or $DEBUG_PORT, same variable as the
--- Makefile), and this adds a "yarwm: attach to make debug-server" entry to
--- nvim-dap's configuration picker (:DapContinue) that attaches to it.
---
--- Two details make this different from a normal nvim-dap-go setup:
---   * nvim-dap-go's "go" adapter always starts its own dlv on the host, so
---     attaching to the container's dlv needs a plain "server" adapter.
---   * The container sees the repo at /workspace; substitutePath maps it to
---     the repo's real path here, so breakpoints and stack frames line up.
---
--- Registered on the first Go buffer, so nvim-dap is only loaded when you
--- actually open Go code. Does nothing if nvim-dap isn't installed.
+-- nvim-dap-go's "go" adapter always starts its own dlv on the host; attaching
+-- to the container's dlv (`make debug-server`) needs a plain "server" adapter.
+-- Registered on the first Go buffer so nvim-dap only loads for Go code.
 vim.api.nvim_create_autocmd("FileType", {
     group = project_group,
     pattern = "go",
@@ -82,6 +56,7 @@ vim.api.nvim_create_autocmd("FileType", {
                     type = "yarwm_container_delve",
                     request = "attach",
                     mode = "remote",
+                    -- The container sees the repo at /workspace.
                     substitutePath = {
                         { from = project_root, to = "/workspace" },
                     },

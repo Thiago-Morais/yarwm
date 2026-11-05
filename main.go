@@ -1,7 +1,4 @@
 // Command yarwm is Yet Another Random Wallpaper Manager.
-//
-// This file only dispatches subcommands; all logic lives under internal/.
-// See docs/spec.md for the full design.
 package main
 
 import (
