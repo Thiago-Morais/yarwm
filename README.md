@@ -90,7 +90,7 @@ make dev-image            # build the dev image (the toolchain), runs automatica
 make shell                # interactive shell inside the dev container
 
 # write
-make fmt                  # gofmt for Go, Prettier for everything else
+make fmt                  # gofmt for Go, via golangci-lint, Prettier for everything else
 make run ARGS="version"   # compile and run from source
 make debug ARGS="version" # Delve debugger in this terminal (see "Debugging")
 make debug-server         # Delve for your editor to attach to (see "Debugging")

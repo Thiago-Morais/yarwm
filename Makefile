@@ -33,7 +33,7 @@ shell: dev-image
 # --- write ------------------------------------------------------------------
 
 fmt: dev-image node_modules
-	$(RUN) go fmt ./...
+	$(RUN) golangci-lint fmt
 	$(PRETTIER) --write --log-level warn .
 
 run: dev-image
@@ -59,7 +59,7 @@ lint: dev-image
 
 # gofmt -l only lists unformatted files; this fails when the list isn't empty.
 fmt-check: dev-image node_modules
-	$(RUN) sh -c 'unformatted="$$(gofmt -l $$(go list -f "{{.Dir}}" ./...))"; if [ -n "$$unformatted" ]; then echo "needs gofmt:"; echo "$$unformatted"; exit 1; fi'
+	$(RUN) golangci-lint fmt --diff
 	$(PRETTIER) --check --log-level warn .
 
 check: fmt-check lint test
