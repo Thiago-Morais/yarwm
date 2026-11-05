@@ -15,13 +15,34 @@ if vim.lsp.config then
 end
 
 local project_group = vim.api.nvim_create_augroup("yarwm_project", { clear = true })
+
+-- Same formatters as `make fmt`, whatever your global conform setup picks
+-- (LazyVim's Go extra adds gofumpt, which `make fmt-check` would undo).
+local project_formatters = {
+    go = { "goimports", "gofmt", stop_after_first = true },
+    markdown = { "prettierd", "prettier", stop_after_first = true },
+    yaml = { "prettierd", "prettier", stop_after_first = true },
+    json = { "prettierd", "prettier", stop_after_first = true },
+}
+
+local conform_available, conform = pcall(require, "conform")
+if conform_available then
+    for filetype, formatters in pairs(project_formatters) do
+        conform.formatters_by_ft[filetype] = formatters
+    end
+end
+
 vim.api.nvim_create_autocmd("BufWritePre", {
     group = project_group,
-    pattern = project_root .. "/*.go",
+    pattern = project_root .. "/*",
     callback = function(event)
-        local gopls_clients = vim.lsp.get_clients({ bufnr = event.buf, name = "gopls" })
-        if #gopls_clients > 0 then
-            vim.lsp.buf.format({ bufnr = event.buf, name = "gopls", timeout_ms = 2000 })
+        if conform_available and project_formatters[vim.bo[event.buf].filetype] then
+            conform.format({ bufnr = event.buf, timeout_ms = 2000 })
+        elseif vim.bo[event.buf].filetype == "go" then
+            local gopls_clients = vim.lsp.get_clients({ bufnr = event.buf, name = "gopls" })
+            if #gopls_clients > 0 then
+                vim.lsp.buf.format({ bufnr = event.buf, name = "gopls", timeout_ms = 2000 })
+            end
         end
     end,
 })

@@ -154,14 +154,27 @@ global ones while you work here:
 - **`.markdownlint.json`** — turns off the markdownlint rules that
   conflict with Prettier, for editors that run both.
 - **`.nvim.lua`** — project-local Neovim settings: gopls is configured to
-  match the project's checks, Go files are formatted with gopls on save,
-  and an nvim-dap entry attaches to the containerized debugger (see
-  "Debugging"). Neovim only loads it if your config sets
+  match the project's checks, files are formatted on save with the same
+  formatters as `make fmt` (through conform.nvim if you have it, otherwise
+  gopls for Go), and an nvim-dap entry attaches to the containerized
+  debugger (see "Debugging"). Neovim only loads it if your config sets
   `vim.o.exrc = true`, and asks you to `:trust` it first. `make` targets
   are meant for a regular terminal.
 
-`gopls` and other Go editor tooling are optional and need a Go toolchain
-on the host; building, testing, linting and debugging never do.
+Everything the editor uses is optional; without it you only lose that
+editor feature, and `make check` still catches anything wrong. Building,
+testing, linting and debugging never need any of it.
+
+| Tool                                                                       | For                                                        | Needs on the host |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------- | ----------------- |
+| [conform.nvim](https://github.com/stevearc/conform.nvim)                   | format on save with the project's formatters               | —                 |
+| `goimports` (e.g. from Mason)                                              | formatting Go                                              | Go                |
+| `gopls` (e.g. from Mason)                                                  | Go completion, diagnostics, and formatting without conform | Go                |
+| `prettierd` (e.g. from Mason), or the repo's own Prettier after `make fmt` | formatting Markdown, YAML and JSON                         | Node              |
+| [nvim-dap](https://github.com/mfussenegger/nvim-dap)                       | debugging from Neovim (see "Debugging")                    | —                 |
+
+Your host Go only runs editor tools; it can be any version at least as
+new as the `go` line in `go.mod`.
 
 ## Debugging
 
