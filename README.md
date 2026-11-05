@@ -79,9 +79,9 @@ CI runs the same checks on every push — see the repo's **Actions** tab.
 ## Development environment
 
 Every Go command runs inside a pinned Docker container, so every
-contributor uses the exact same Go and golangci-lint versions (pinned in
-[`docker/dev/Dockerfile`](docker/dev/Dockerfile), kept current by
-Dependabot). On the host you only need Docker (with the Compose plugin),
+contributor uses the exact same Go, golangci-lint and Prettier versions
+(pinned in [`docker/dev/Dockerfile`](docker/dev/Dockerfile) and
+`package.json`, kept current by Dependabot). On the host you only need Docker (with the Compose plugin),
 `make` and `git` — no local Go install.
 
 ```sh
@@ -90,7 +90,7 @@ make dev-image            # build the dev image (the toolchain), runs automatica
 make shell                # interactive shell inside the dev container
 
 # write
-make fmt                  # go fmt ./...
+make fmt                  # gofmt for Go, Prettier for everything else
 make run ARGS="version"   # compile and run from source
 make debug ARGS="version" # Delve debugger in this terminal (see "Debugging")
 make debug-server         # Delve for your editor to attach to (see "Debugging")
@@ -144,6 +144,13 @@ global ones while you work here:
 - **`.editorconfig`** — indentation, line endings, final newline, trailing
   whitespace for every file type. Neovim reads it natively; VS Code needs
   the EditorConfig extension.
+- **`.prettierrc.json`** — empty on purpose: Prettier's defaults plus
+  `.editorconfig`. Its presence also stops Prettier from using a global
+  `~/.prettierrc`. Editor integrations (prettierd, VS Code's Prettier
+  extension) pick up the pinned Prettier from `node_modules/` once
+  `make fmt` has installed it.
+- **`.markdownlint.json`** — turns off the markdownlint rules that
+  conflict with Prettier, for editors that run both.
 - **`.nvim.lua`** — project-local Neovim settings: gopls is configured to
   match the project's checks, Go files are formatted with gopls on save,
   and an nvim-dap entry attaches to the containerized debugger (see
@@ -169,7 +176,7 @@ make debug ARGS="version"
 This builds yarwm with debug info and stops before `main` runs, at a
 `(dlv)` prompt:
 
-```
+```text
 (dlv) break main.main      # breakpoint at the start of main()
 (dlv) continue             # run until a breakpoint
 (dlv) next                 # step over
@@ -186,9 +193,9 @@ Needs [nvim-dap](https://github.com/mfussenegger/nvim-dap) and the
 
 1. In a terminal, start the debug server (it waits for the editor):
 
-   ```sh
-   make debug-server ARGS="version"
-   ```
+    ```sh
+    make debug-server ARGS="version"
+    ```
 
 2. In Neovim, set breakpoints, start debugging (`:DapContinue`) and pick
    **yarwm: attach to make debug-server**. The program runs until it hits a
