@@ -6,7 +6,7 @@ Read the [plan README](README.md) first — it explains how to work
 through a step, the conventions, and the decisions referenced below
 (D1, D2, …). Spec sections (§) refer to [`spec.md`](../spec.md).
 
-### Step 28 — Browsing: `previous`, `next N`, `undo`, `redo`
+## Step 28 — Browsing: `previous`, `next N`, `undo`, `redo`
 
 **Branch** `feature/browsing` · **Commit** `feat(selection): browse recent wallpapers` · **Spec** §7 (two families, real rotation branches)
 
@@ -37,6 +37,7 @@ Extend `Rotate` with the two remaining branches from spec §7:
 Remove step 21's "pointer must be 0" error.
 
 **Tests**, as scenarios from the spec:
+
 - `previous` twice then three rotations → walks back to 0 one step per rotation, then generates
 - `undo` twice then one rotation → clamps (`Recent[0]` becomes the peeked entry, newer ones dropped) and generates
 - `skip` after `previous` → clamps despite the flag
@@ -44,7 +45,7 @@ Remove step 21's "pointer must be 0" error.
 - backward is capped at the oldest entry
 - cursor moves never touch `history.json`
 
-### Step 29 — `clamp`
+## Step 29 — `clamp`
 
 **Branch** `feature/clamp` · **Commit** `feat(cli): add clamp command` · **Spec** §7 (`clamp`)
 
@@ -55,7 +56,7 @@ screen). At pointer 0, say there's nothing to clamp.
 **Tests:** clamp after `previous 2` → `Recent[0]` is the displayed entry,
 pointer 0 · clamp at pointer 0 → no change.
 
-### Step 30 — `query_next_image`
+## Step 30 — `query_next_image`
 
 **Branch** `feature/query-next` · **Commit** `feat(cli): add query_next_image` · **Spec** §7 · **Decisions** D15
 
@@ -65,11 +66,11 @@ recomputed and saved if stale (D15). Nothing is displayed.
 **Tests:** prints the stored `next` · stale → recomputed, saved, printed ·
 the following rotation shows the printed path.
 
-### Step 31 — `status`
+## Step 31 — `status`
 
 **Branch** `feature/status` · **Commit** `feat(cli): add status command` · **Spec** §7 (`status`)
 
-```
+```text
 current   /path/a.jpg  (quality 8, frequency 5)
 last      /path/b.jpg
 next      /path/c.jpg
@@ -86,7 +87,7 @@ Read-only: selection state, tags, session filter, paused file,
 pointer isn't 0 and says "clamps" vs "walks back" from the flag · filter
 source label.
 
-### Step 32 — `rebucket`
+## Step 32 — `rebucket`
 
 **Branch** `feature/rebucket` · **Commit** `feat(history): add rebucket maintenance command` · **Spec** §6 (config changes) · **Decisions** D20
 
@@ -113,7 +114,7 @@ into 1-day spreads evenly · total screen time is conserved in both
 directions · `splits` is false for pure merges · without `--force` nothing
 is written.
 
-### Step 33 — User documentation and v0.2.0
+## Step 33 — User documentation and v0.2.0
 
 **Branch** `feature/user-docs` · **Commit** `docs: add usage guide`
 
