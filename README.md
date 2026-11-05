@@ -152,8 +152,20 @@ global ones while you work here:
   `vim.o.exrc = true`, and asks you to `:trust` it first. `make` targets
   are meant for a regular terminal.
 
-`gopls` and other Go editor tooling are optional and need a Go toolchain
-on the host; building, testing, linting and debugging never do.
+Everything the editor uses is optional; without it you only lose that
+editor feature, and `make check` still catches anything wrong. Building,
+testing, linting and debugging never need any of it.
+
+| Tool                                                                       | For                                                        | Needs on the host |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------- | ----------------- |
+| [conform.nvim](https://github.com/stevearc/conform.nvim)                   | format on save with the project's formatters               | —                 |
+| `goimports` (e.g. from Mason)                                              | formatting Go                                              | Go                |
+| `gopls` (e.g. from Mason)                                                  | Go completion, diagnostics, and formatting without conform | Go                |
+| `prettierd` (e.g. from Mason), or the repo's own Prettier after `make fmt` | formatting Markdown, YAML and JSON                         | Node              |
+| [nvim-dap](https://github.com/mfussenegger/nvim-dap)                       | debugging from Neovim (see "Debugging")                    | —                 |
+
+Your host Go only runs editor tools; it can be any version at least as
+new as the `go` line in `go.mod`.
 
 ## Debugging
 
@@ -187,9 +199,9 @@ Needs [nvim-dap](https://github.com/mfussenegger/nvim-dap) and the
 
 1. In a terminal, start the debug server (it waits for the editor):
 
-   ```sh
-   make debug-server ARGS="version"
-   ```
+    ```sh
+    make debug-server ARGS="version"
+    ```
 
 2. In Neovim, set breakpoints, start debugging (`:DapContinue`) and pick
    **yarwm: attach to make debug-server**. The program runs until it hits a
