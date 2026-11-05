@@ -1,12 +1,9 @@
-# Build output (`make build`)
 /build/
 
-# Go module + build caches written by the dev container
 /.cache/
 
-# Local overrides for the dev container (DEV_UID/DEV_GID)
+# docker compose reads DEV_UID/DEV_GID overrides from it.
 .env
 
-# Editor / OS noise
 *.swp
 .DS_Store

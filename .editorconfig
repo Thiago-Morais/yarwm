@@ -1,6 +1,3 @@
-# Project formatting rules — these override your editor's global settings.
-# Go files are formatted by gofmt (`make fmt`); this file covers everything
-# else and keeps editors from fighting gofmt on Go files.
 root = true
 
 [*]
@@ -11,7 +8,7 @@ trim_trailing_whitespace = true
 indent_style = space
 indent_size = 4
 
-# gofmt indents with tabs; a Makefile *must* use tabs. Tabs display as 4.
+# gofmt indents with tabs, and make requires them.
 [{*.go,go.mod,Makefile}]
 indent_style = tab
 

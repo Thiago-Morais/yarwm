@@ -1,8 +1,7 @@
 services:
     dev:
         build:
-            # Only the dev image's own directory — the repo itself is mounted
-            # below at runtime, never copied into the image.
+            # The repo is mounted, not copied, so keep the context small.
             context: ./docker/dev
             args:
                 DEV_UID: ${DEV_UID:-1000}
@@ -10,7 +9,6 @@ services:
         image: yarwm-dev
         working_dir: /workspace
         volumes:
-            # The repo, including .cache/ (Go module + build caches) and build/.
             - .:/workspace
         stdin_open: true
         tty: true

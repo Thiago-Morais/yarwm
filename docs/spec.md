@@ -40,8 +40,7 @@ because the generated default config relies on comments (section 8).
 Don't add a CLI framework (e.g. cobra) — the subcommand set is small
 enough for `flag.FlagSet`, and it keeps the dependency list at one.
 
-**Code style:** descriptive names. Go convention of no `Get` prefix on
-accessors applies (`ScreenTime()`, not `GetScreenTime()`).
+**Code style:** see "Code style" in `CONTRIBUTING.md`.
 
 **Suggested layout:**
 

@@ -1,9 +1,7 @@
 module github.com/Thiago-Morais/yarwm
 
-// Minimum Go version this module needs — not the toolchain we build with.
-// The exact toolchain is pinned by the dev image (docker/dev/Dockerfile) and
-// kept current by Dependabot. Raise this only to use newer language or
-// standard library features.
+// The minimum Go the code needs, not the toolchain (that's the Dockerfile).
+// Raise it only to use a newer language or standard library feature.
 go 1.27.0
 
 tool github.com/go-delve/delve/cmd/dlv
