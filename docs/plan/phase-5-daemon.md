@@ -6,7 +6,7 @@ Read the [plan README](README.md) first — it explains how to work
 through a step, the conventions, and the decisions referenced below
 (D1, D2, …). Spec sections (§) refer to [`spec.md`](../spec.md).
 
-### Step 24 — Tick schedule and `time_left`
+## Step 24 — Tick schedule and `time_left`
 
 **Branch** `feature/schedule` · **Commit** `feat(schedule): align ticks to midnight and add time_left` · **Spec** §5, §7 (`time_left`) · **Decisions** D11
 
@@ -33,7 +33,7 @@ after) · 5 s → next multiple of 5 · 7 h → 07:00, 14:00, 21:00, then
 midnight · 0.5 s intervals · a DST-change day (use a real zone, e.g.
 `time.LoadLocation("America/New_York")`) · `FormatDuration` cases.
 
-### Step 25 — `pause` and `resume`
+## Step 25 — `pause` and `resume`
 
 **Branch** `feature/pause` · **Commit** `feat(cli): add pause and resume` · **Spec** §7
 
@@ -45,7 +45,7 @@ midnight · 0.5 s intervals · a DST-change day (use a real zone, e.g.
 **Tests:** pause → paused · pause twice → still paused, no error · resume →
 not paused · resume when not paused → no error.
 
-### Step 26 — `start` (the daemon)
+## Step 26 — `start` (the daemon)
 
 **Branch** `feature/daemon` · **Commit** `feat(daemon): rotate on aligned ticks` · **Spec** §5, §7 (daemon startup) · **Decisions** D13, D14
 
@@ -84,7 +84,7 @@ error on one tick doesn't stop the loop.
 **Try it:** `./build/yarwm start` in a terminal with `interval = 5` in your
 config, then add `exec-once = /path/to/yarwm start` to your Hyprland config.
 
-### Step 27 — Reload only on change
+## Step 27 — Reload only on change
 
 **Branch** `feature/reload-on-change` · **Commit** `feat(daemon): reload state files only when they change` · **Spec** §5 (last bullet), §10
 
