@@ -6,7 +6,7 @@ Read the [plan README](README.md) first — it explains how to work
 through a step, the conventions, and the decisions referenced below
 (D1, D2, …). Spec sections (§) refer to [`spec.md`](../spec.md).
 
-### Step 8 — Library scan
+## Step 8 — Library scan
 
 **Branch** `feature/library-scan` · **Commit** `feat(library): scan library with ignore files` · **Spec** §3 · **Decisions** D21
 
@@ -34,7 +34,7 @@ files · extension case · recursive on/off · `.ignore` skips a file and a
 whole subdirectory · `.ignore` in a subdirectory doesn't affect its parent ·
 invalid pattern → error · missing root → `errors.Is(err, fs.ErrNotExist)`.
 
-### Step 9 — Content hashing and library index
+## Step 9 — Content hashing and library index
 
 **Branch** `feature/library-index` · **Commit** `feat(library): cache content hashes in a library index` · **Spec** §1 · **Decisions** D8
 
@@ -69,7 +69,7 @@ keeps its hash under the new path · removed file disappears · identical
 content in two files → one hash, first path wins · `changed` is false when
 nothing changed.
 
-### Step 10 — Tags store
+## Step 10 — Tags store
 
 **Branch** `feature/tags-store` · **Commit** `feat(tags): add tags store` · **Spec** §1 · **Decisions** D1, D2
 
@@ -105,7 +105,7 @@ func (store Store) Frequency(hash string) int // DefaultFrequency when unset
 → error and no change · `Frequency` default · save → load round-trip
 (unset fields stay absent in the JSON).
 
-### Step 11 — `tag <file>`
+## Step 11 — `tag <file>`
 
 **Branch** `feature/tag-command` · **Commit** `feat(cli): add tag command for files` · **Spec** §1
 
@@ -127,11 +127,11 @@ without writing · missing file → error · invalid value → exit 1.
 `./build/yarwm tag ~/Pictures/some.jpg --quality 8` and inspect
 `~/.config/yarwm/tags.json`.
 
-### Step 12 — `tag-bulk`
+## Step 12 — `tag-bulk`
 
 **Branch** `feature/tag-bulk` · **Commit** `feat(cli): add tag-bulk command` · **Spec** §1 · **Decisions** D19
 
-```
+```text
 yarwm tag-bulk [--pattern GLOB]
                [--filter-quality N | --filter-quality-min N --filter-quality-max N]
                [--filter-frequency N | --filter-frequency-min N --filter-frequency-max N]
@@ -154,13 +154,13 @@ relative path · quality filter excludes untagged · frequency filter uses the
 default for untagged · filters combine with AND · CLI: answering `n` changes
 nothing; `--yes` applies; missing `--set-*` → usage error.
 
-### Step 13 — Migration tool
+## Step 13 — Migration tool
 
 **Branch** `feature/migrate` · **Commit** `feat(migrate): import quality from nested quality-N folders` · **Spec** §2
 
 `cmd/migrate/main.go` — its own binary, deleted after use.
 
-```
+```text
 migrate [--dry-run] <old-root>
 ```
 
