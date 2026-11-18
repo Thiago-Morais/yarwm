@@ -2,7 +2,7 @@
 # (see "Tool versions" in CONTRIBUTING.md).
 FROM golangci/golangci-lint:v2.15.0 AS golangci-lint
 
-FROM node:26.13.0-trixie-slim AS node
+FROM node:26.13.1-trixie-slim AS node
 
 FROM golang:1.27.3-trixie
 
